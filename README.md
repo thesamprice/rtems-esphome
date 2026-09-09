@@ -29,17 +29,18 @@ is somewhere to run it without hardware in the loop.
 | RTEMS builds for `riscv/esp32c3db` | 632 test executables, `riscv-rtems7-gcc` 15.2.0 |
 | Boots under QEMU | ROM direct boot, console on UART0 |
 | Clock, interrupts | working — after the QEMU fix below |
-| Testsuite | 414 pass, 14 xfail, 31 fail of 459 |
+| Testsuite | 419 pass, 14 xfail, 26 fail of 459 |
 
-The failures are mostly the part being small: 320 KiB of RAM is not enough for
-the filesystem tests to allocate a RAM disk. `docs/esp32c3-bsp.md` has the full
-breakdown, and the open ones are issues here.
+The failures are almost all the part being small: 320 KiB of RAM is not enough
+for the filesystem tests to allocate a RAM disk. One, `psxstat`, is genuinely
+unexplained; one, `ttest01`, fails on every architecture upstream.
+`docs/esp32c3-bsp.md` has the full breakdown.
 
 Nothing is running on real silicon yet. Everything above is QEMU.
 
 ## What it took
 
-Two fixes, both written up in `docs/esp32c3-bsp.md`, both candidates for their
+Three fixes, all written up in `docs/esp32c3-bsp.md`, all candidates for their
 upstreams:
 
 **`patches/esp-qemu/intmatrix-status.patch`** — QEMU's ESP32-C3 interrupt
@@ -48,6 +49,12 @@ how software finds out which peripheral raised a CPU interrupt line, since the
 matrix maps 62 sources onto 31 lines. Without them every interrupt dispatches
 as the invalid vector and the first clock tick is a fatal spurious interrupt,
 so nothing past `hello` runs. Four lines; the model already keeps the value.
+
+**`patches/esp-qemu/systimer-counter-remainder.patch`** — QEMU's systimer
+converted elapsed nanoseconds to counter ticks with an integer division and then
+discarded the remainder. A tick is 62.5 ns and every guest read is an update, so
+the counter ran slow in proportion to how often software looked at it. Five
+tests move from fail to pass.
 
 **`patches/rtems/esp32c3-systimer-frequency.patch`** — the BSP declared the
 system timer at `16 * 1024 * 1024` Hz under a comment saying 16 MHz. It is 16

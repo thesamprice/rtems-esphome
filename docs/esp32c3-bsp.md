@@ -285,10 +285,23 @@ because `sp69` shows it is worth three orders of magnitude of clock accuracy;
 
 | test | what it does |
 |---|---|
-| `spcpucounter01` | prints its banner and stops, with icount or without. A hang, not a wrong answer |
+| `spcpucounter01` | `init.c:107 tick < rtems_clock_get_ticks_since_boot()` — the same defect as `sp69` from another angle, see below |
 | `ttest01` | `test-malloc.c:75 *ctx->c == c`; also an upstream-known failure on every architecture, and on mbv's known-failure list |
 | `psxstat` | `test.c:790 status == -1` — a mkdir that should have failed with EACCES did not |
 | `sp69` | see above; a `>=` on a period that is a few ppm short |
+
+`spcpucounter01` belongs with the systimer story rather than on its own. It
+configures a 1 ms tick, syncs to a clock tick, delays one full tick period
+through the CPU counter, and asserts that a tick has elapsed. It has not hung —
+attaching gdb finds it already in `bsp_reset`, having failed and shut down — so
+on this BSP the tick period and the CPU counter disagree by enough to lose that
+race. That is `sp69`'s few-ppm shortfall seen from the other side, and both
+point at the TARGET0 period versus the counter.
+
+It was read as a hang first, from a log that stopped after the banner. That run
+was on a host that had run out of memory and QEMU was killed before the rest
+reached the serial file. A truncated log and a hang look identical, so the
+state of the machine is part of the evidence.
 
 That `ttest02` gets through `TestInterruptTimeout` and `TestInterruptFatal`
 before stopping is worth noting either way: the interrupt machinery this BSP

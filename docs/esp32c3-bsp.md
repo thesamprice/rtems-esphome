@@ -1,9 +1,10 @@
 # riscv/esp32c3db — the Espressif ESP32-C3 on QEMU
 
 The BSP is upstream RTEMS (`bsps/riscv/esp32`, `spec/build/bsps/riscv/esp32`,
-added by Kinsey Moore in 2026). Nothing in this repository patches it. What is
-here is the config, a test runner, and one four-line fix to QEMU without which
-the BSP cannot take an interrupt.
+added by Kinsey Moore in 2026). What is here is the config, a test runner, one
+one-line fix to the BSP, and two fixes to QEMU — one without which the BSP
+cannot take an interrupt at all, and one without which its clock runs slow in
+proportion to how often software looks at it.
 
 ## Why the C3 and not the ESP32
 
@@ -240,6 +241,65 @@ period and the period is a few parts per million short. Whether that last bit
 belongs to the TARGET0 period programming or to QEMU's comparator reload has
 not been run down.
 
+## The QEMU counter loses a tick on every read
+
+The frequency fix above left `sp69` failing by 5.8 ppm and `spcpucounter01`
+failing outright. Both were QEMU, in one line.
+
+`hw/timer/esp_systimer.c`:
+
+```c
+static void esp_systimer_update_counter(ESPSysTimerCounter *counter) {
+    const int64_t now = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+    const int64_t elapsed_ns = now - counter->base;
+    const int64_t ticks = (elapsed_ns * (ESP_SYSTIMER_CNT_CLK / 1000000)) / 1000;
+    counter->value = (counter->value + ticks) & ESP_SYSTIMER_52BIT_MASK;
+    counter->base = now;
+}
+```
+
+One systimer tick is 62.5 ns. The conversion truncates, and then `base = now`
+throws the remainder away rather than carrying it, so **each update loses up to
+one tick**. It is not a fixed error: the counter runs slow in proportion to how
+often the guest reads it, because every read is an update. `_CPU_Counter_read()`
+writes `UNIT0_OP` with `UPDATE`, which reaches `esp_systimer_flush_counter()`
+and so `esp_systimer_update_counter()`, on every single call.
+
+The arithmetic matches what `sp69` measured. It lost about 56 counts across 60
+clock ticks, ≈0.93 counts per tick, and RTEMS's timecounter reads the counter
+about once per tick. Sub-tick remainder, discarded once per read.
+
+`spcpucounter01` shows the read spacing directly, in its own overhead figures:
+
+```
+overhead read: 0 ticks, 0ns
+overhead read: 1 ticks, 62ns
+```
+
+Consecutive reads land 0 to 62.5 ns apart — at or below one tick period. That is
+the worst case for this code: when successive reads are closer together than a
+tick, every conversion truncates to zero and every remainder is discarded, so
+the counter can fail to advance at all for as long as the guest keeps reading
+it. A busy-wait on the counter is precisely that shape.
+
+The fix carries the remainder in the counter state:
+
+```c
+const int64_t scaled = elapsed_ns * (ESP_SYSTIMER_CNT_CLK / 1000000)
+                     + counter->frac;
+const int64_t ticks = scaled / 1000;
+counter->frac = scaled % 1000;
+```
+
+`patches/esp-qemu/systimer-counter-remainder.patch`. `sp69`'s 600 ms period
+goes from 599996499 ns to 600000375 ns, from 5.8 ppm short to 0.6 ppm long, and
+five tests move from fail to pass.
+
+Note that this is not RTEMS-specific and not `-icount`-specific. Any guest that
+reads the systimer counter more often than once per 62.5 ns sees a slow clock;
+instruction counting only makes the reads land closer together and so exposes it
+hardest.
+
 ## Memory
 
 `ESP32C_CODE_REGION_SIZE` is 1 MiB of the 4 MiB flash, and RAM is 320 KiB at
@@ -253,14 +313,15 @@ overflow.
 default (benchmarks, tmtests, psxtmtests, rhealstone, spintrcritical\*).
 `-j 2`, `-icount shift=0,sleep=off`, patched QEMU.
 
-| | |
-|---|---|
-| PASS | 414 |
-| XFAIL | 14 |
-| FAIL | 31 |
+| | before the counter fix | after |
+|---|---|---|
+| PASS | 414 | **419** |
+| XFAIL | 14 | 14 |
+| FAIL | 31 | **26** |
 
-The same 31 fail with and without the systimer frequency fix, and the set is
-identical between runs. They fall into three groups.
+`patches/esp-qemu/systimer-counter-remainder.patch` moved five tests from fail
+to pass — `sp69`, `spcpucounter01`, `sptimecounter02`, `record04` and `ttest02`
+— and moved nothing the other way. The remaining 26 fall into three groups.
 
 **23 are the part being small.** 20 filesystem tests never get a RAM disk
 (`ramdisk_support.c: 55 rc == 0`), `fsdosfssync01` and `fsdosfsformat01` fail
@@ -270,42 +331,41 @@ enough for what those tests want to allocate. Nothing to fix in the BSP.
 
 **2 are the timecounter**, `sp69` and `sptimecounter02`, described above.
 
-**2 are `-icount` artifacts, not BSP defects.** `record04` and `ttest02` fail
-with `-icount shift=0,sleep=off` and pass without it. The timeout budget is not
-what separates them: `record04` sits at `B:RecordFetchConcurrent` and goes no
-further whether the limit is 120 s or 300 s, so under instruction counting it
-is waiting on something that never arrives rather than merely running slowly.
-This is the opposite of the mbv BSP's experience, where icount is what makes
-`ttest02` and the `spintrcritical` family pass, so it is worth knowing that the
-setting is not uniformly good here. The runner leaves icount on by default,
-because `sp69` shows it is worth three orders of magnitude of clock accuracy;
-`-I` turns it off for these.
+**24 are the part being small.** 20 filesystem tests never get a RAM disk
+(`ramdisk_support.c: 55 rc == 0`), `fsdosfssync01` and `fsdosfsformat01` fail
+opening and formatting one, `fsrofs01` reports `buffer open failed: 6`, and
+`capture01` dies on `INTERNAL_ERROR_TOO_LITTLE_WORKSPACE`. 320 KiB is not
+enough for what those tests want to allocate. Nothing to fix in the BSP.
 
-**4 are not yet explained**, and are the ones worth someone's time:
+**1 is upstream-known.** `ttest01` fails `test-malloc.c:75 *ctx->c == c`, and it
+fails on every architecture; it is on the mbv BSP's known-failure list too.
 
-| test | what it does |
-|---|---|
-| `spcpucounter01` | `init.c:107 tick < rtems_clock_get_ticks_since_boot()` — the same defect as `sp69` from another angle, see below |
-| `ttest01` | `test-malloc.c:75 *ctx->c == c`; also an upstream-known failure on every architecture, and on mbv's known-failure list |
-| `psxstat` | `test.c:790 status == -1` — a mkdir that should have failed with EACCES did not |
-| `sp69` | see above; a `>=` on a period that is a few ppm short |
+**1 is not explained.** `psxstat` fails `test.c:790 status == -1` — a mkdir that
+should have returned EACCES did not. It runs a long way, 48 KB of output, before
+that, and it is not a RAM disk failure, so it is not simply the part being
+small. This is the one left worth someone's time.
 
-`spcpucounter01` belongs with the systimer story rather than on its own. It
-configures a 1 ms tick, syncs to a clock tick, delays one full tick period
-through the CPU counter, and asserts that a tick has elapsed. It has not hung —
-attaching gdb finds it already in `bsp_reset`, having failed and shut down — so
-on this BSP the tick period and the CPU counter disagree by enough to lose that
-race. That is `sp69`'s few-ppm shortfall seen from the other side, and both
-point at the TARGET0 period versus the counter.
+### What the earlier reading of these numbers got wrong
 
-It was read as a hang first, from a log that stopped after the banner. That run
-was on a host that had run out of memory and QEMU was killed before the rest
-reached the serial file. A truncated log and a hang look identical, so the
-state of the machine is part of the evidence.
+Two things, both worth keeping because both were confident and both were wrong.
 
-That `ttest02` gets through `TestInterruptTimeout` and `TestInterruptFatal`
-before stopping is worth noting either way: the interrupt machinery this BSP
-needed QEMU patched for is demonstrably working by then.
+`record04` and `ttest02` were recorded as `-icount` artifacts on the grounds
+that they failed with instruction counting and passed without it, at the same
+timeout in both directions. That correlation was real. The conclusion drawn
+from it — that icount is "not uniformly good here", unlike on mbv where it is
+what makes those same tests pass — was not. They were failing on the QEMU
+counter defect described above, and icount is simply the configuration that
+exposes it hardest: with virtual time advancing per instruction, consecutive
+counter reads land closest together, which is exactly where the truncation lost
+the most. Both pass with icount once the counter is fixed.
+
+`spcpucounter01` was recorded as a hang. It was a truncated log from a run on a
+host that had run out of memory, and QEMU was killed before the rest reached the
+serial file. A truncated log and a hang look identical.
+
+The general lesson is the same one twice: a correlation between a knob and a
+failure is not the mechanism, and the state of the machine is part of the
+evidence.
 
 ## State
 
@@ -314,5 +374,5 @@ needed QEMU patched for is demonstrably working by then.
 | Builds | yes, 632 test executables, `riscv-rtems7-gcc` 15.2.0, no `rv32imc` multilib so `rv32im/ilp32` is selected |
 | `hello` | passes, on stock Espressif QEMU too |
 | `ticker` and interrupts | pass on the patched QEMU; fatal spurious interrupt without it |
-| `-icount shift=0,sleep=off` | works on this machine, and is on by default in the runner |
+| `-icount shift=0,sleep=off` | works, on by default in the runner, and no longer implicated in any failure |
 | Evidence pipeline | not wired up. There is no `config_esp32c3db_fanalyzer.ini` or `_coverage.ini`, so `make fanalyzer` and `make coverage` will refuse; `make CONFIG=configs/config_esp32c3db.ini tests` also still calls `tools/mbv-run-tests.sh`, not the runner here |

@@ -1,0 +1,10 @@
+# Espressif's QEMU fork, needed only to run the ESP32-C3 lane.  Declared with
+# "update = none" so a plain clone does not pay for it; scripts/build_esp_qemu.sh
+# fetches it on demand.
+[submodule "src/esp-qemu"]
+	path = src/esp-qemu
+	url = https://github.com/espressif/qemu.git
+	# Pinned at 40edccac, the release tag esp-develop-9.2.2-20260417.  The
+	# branch is the update channel; the tag is what was built and verified.
+	branch = esp-develop
+	update = none

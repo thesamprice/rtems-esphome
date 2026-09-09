@@ -1,0 +1,3 @@
+*.bin
+*.log
+esp32c3-test-results.*

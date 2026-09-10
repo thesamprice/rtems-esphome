@@ -34,11 +34,29 @@
 
 [submodule "src/esphome"]
 	path = src/esphome
-	# The thing being ported.  Python validation and code generation plus the
-	# C++ runtime; the port touches both.  "dev" is upstream's default branch
-	# and its development line -- there is no "main" here.
-	url = https://github.com/esphome/esphome.git
-	branch = dev
+	# The thing being ported, forked so the RTEMS backend is commits rather
+	# than a patch set.  Python validation and code generation plus the C++
+	# runtime; the port touches both.
+	#
+	# Branch "rtems" starts at 58ca345, which is upstream dev at the time the
+	# pin was taken.  A platform backend is not a small diff -- it adds a
+	# platform component, a core/wake/wake_rtems.*, a Python build target, a HAL
+	# header and USE_RTEMS through defines.h -- and rebasing a patch set that
+	# size by hand against a tree that moves daily is the failure mode patches/
+	# exists to avoid rather than an instance of it.  ESPHome takes new
+	# platforms upstream; Zephyr and LibreTiny both arrived that way, so the end
+	# state is a pull request and a fork is the form that ends in.
+	#
+	# Upstream dev moves fast.  Rebase deliberately and record the new pin here
+	# rather than letting the branch drift, because the pin is what makes a
+	# result attributable.
+	url = git@github.com:thesamprice/esphome.git
+	# The same over https, when there is no key on the machine:
+	#url = https://github.com/thesamprice/esphome.git
+	# Upstream, which does NOT contain the RTEMS backend.  "dev" is its default
+	# branch and its development line; there is no "main" here.
+	#url = https://github.com/esphome/esphome.git
+	branch = rtems
 	update = none
 
 [submodule "src/osal"]

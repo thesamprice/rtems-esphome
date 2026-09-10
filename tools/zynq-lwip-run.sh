@@ -11,6 +11,7 @@
 #   -t SECS   hard timeout         (default: 90)
 #   -p PORT   host port to forward (default: 5555)
 #   -M TEXT   the marker that means success (default: "CI-MARKER net ok")
+#   -n        do not connect from the host: for a test that does not listen
 #
 # Why this is not rtems-ci-run.sh
 #   That harness boots a raw flash image with "-drive if=mtd", which is the
@@ -36,14 +37,16 @@ OUT=""
 TMO=90
 PORT=5555
 MARKER="CI-MARKER net ok"
+CONNECT=1
 
-while getopts "q:o:t:p:M:" opt; do
+while getopts "q:o:t:p:M:n" opt; do
   case $opt in
     q) QEMU=$OPTARG;;
     o) OUT=$OPTARG;;
     t) TMO=$OPTARG;;
     p) PORT=$OPTARG;;
     M) MARKER=$OPTARG;;
+    n) CONNECT=0;;
     *) exit 2;;
   esac
 done
@@ -70,13 +73,15 @@ rm -f "$log"
 qpid=$!
 
 verdict=TIMEOUT
-for _ in $(seq 1 $((TMO * 2))); do
-  grep -q "listening on" "$log" 2>/dev/null && break
-  kill -0 $qpid 2>/dev/null || break
-  sleep 0.5
-done
+if [ "$CONNECT" = 1 ]; then
+  for _ in $(seq 1 $((TMO * 2))); do
+    grep -q "listening on" "$log" 2>/dev/null && break
+    kill -0 $qpid 2>/dev/null || break
+    sleep 0.5
+  done
+fi
 
-if grep -q "listening on" "$log" 2>/dev/null; then
+if [ "$CONNECT" = 1 ] && grep -q "listening on" "$log" 2>/dev/null; then
   python3 - "$PORT" <<'PY' > "$OUT/host.log" 2>&1
 import socket, sys
 port = int(sys.argv[1])
@@ -87,8 +92,10 @@ s.close()
 PY
 fi
 
-for _ in $(seq 1 40); do
-  grep -q "END OF ZYNQ LWIP TEST" "$log" 2>/dev/null && break
+for _ in $(seq 1 $((TMO * 2))); do
+  grep -qF "$MARKER" "$log" 2>/dev/null && break
+  grep -q "failure(s)" "$log" 2>/dev/null && break
+  kill -0 $qpid 2>/dev/null || break
   sleep 0.5
 done
 kill -9 $qpid 2>/dev/null

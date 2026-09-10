@@ -1,0 +1,28 @@
+# network/ip_address.h on RTEMS: parse, format and compare, v4 and v6.
+#
+# The POSIX arm of that header is reused rather than a new one added -- it is
+# <arpa/inet.h>, struct in_addr and inet_pton, with nothing host-specific about
+# it. This checks that reuse actually holds rather than merely compiles.
+#
+# arm/xilinx_zynq_a9_qemu, because `network:` is what defines USE_NETWORK and
+# the ESP32-C3 has no NIC to configure one against (rtems-esphome#30).
+
+esphome:
+  name: ipzynq
+  includes:
+    - zynq_ip_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_ip_test::run();"
+
+rtems:
+  bsp: arm/xilinx_zynq_a9_qemu
+
+logger:
+  level: DEBUG
+
+network:
+  # Explicit, because the exit criterion names both families and the
+  # default leaves USE_NETWORK_IPV6 undefined.
+  enable_ipv6: true

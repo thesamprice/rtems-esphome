@@ -4,8 +4,10 @@
 # exists to be identical to the ESP-IDF lane's and adding to it would break the
 # comparison it is for.
 #
-# GPIO4 and GPIO5: neither is a strapping pin and neither is wired to UART0,
-# which is the console.
+# GPIO4 and GPIO3.  Free pins are a shorter list than it looks on this part: 2,
+# 8 and 9 are strapping, 12 to 17 are the SPI flash on every module, 18 and 19
+# are USB, 20 and 21 are UART0 which is the console, and 5 and 6 are where the
+# BSP's I2C driver routes SDA and SCL.
 
 esphome:
   name: gpio
@@ -35,7 +37,7 @@ binary_sensor:
     id: pin_in
     name: "Pulled up input"
     pin:
-      number: 5
+      number: 3
       mode:
         input: true
         pullup: true

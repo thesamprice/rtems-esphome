@@ -20,10 +20,13 @@ namespace rtems_gpio_test {
 
 static const char *const TAG = "gpio_test";
 
-// Must match the pin numbers in gpio.yaml.
+// Must match the pin numbers in gpio.yaml.  Free pins are a shorter list than
+// it looks on this part: 2, 8 and 9 are strapping, 12 to 17 are the SPI flash
+// on every module, 18 and 19 are USB, 20 and 21 are UART0, and 5 and 6 are
+// where the BSP's I2C driver routes SDA and SCL.
 static constexpr uint32_t BANK = 0;
 static constexpr uint32_t PIN_OUT = 4;
-static constexpr uint32_t PIN_IN = 5;
+static constexpr uint32_t PIN_IN = 3;
 
 static int failures = 0;
 

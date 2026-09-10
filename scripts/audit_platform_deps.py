@@ -113,7 +113,12 @@ COMPILED = [(f, n, re.compile(p)) for f, n, p in RULES]
 
 # Platform backends.  A dependency inside one of these is the platform doing its
 # job.  An RTEMS port adds a sibling; it does not remove these.
-PLATFORM_COMPONENTS = ("esp32", "esp8266", "libretiny", "rp2", "host", "zephyr")
+#
+# "rtems" is in the list for the same reason the rest are: its own directory is
+# where its platform-specific code belongs.  Leaving it out would count every
+# line of the port as new coupling and make the number go up as the port
+# progresses, which is the opposite of what it measures.
+PLATFORM_COMPONENTS = ("esp32", "esp8266", "libretiny", "rp2", "host", "zephyr", "rtems")
 
 # core/wake/ is per-platform by design: wake.h dispatches, wake_<platform>.*
 # implement.  Treat the implementations as platform backends.

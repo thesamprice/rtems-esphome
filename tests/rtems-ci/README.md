@@ -50,6 +50,7 @@ reference node would turn the A/B into a comparison of something else.
 | `primitives.yaml` | time, mutexes, ISR wake, priority inheritance |
 | `gpio.yaml` | a pin declared in YAML is really driven, and its interrupt really arrives |
 | `i2c.yaml` | a real device on the bus answers, and one that is not there does not |
+| `uart.yaml` | bytes leave the port and the reply comes back |
 
 ### `gpio.yaml`
 
@@ -128,6 +129,52 @@ and nothing else out of the 112 addresses it probes.
 Requires the QEMU fork at `2546b01` or later. Before that the RISC-V machine had
 no I2C controller at all — accesses were absorbed by the catch-all IO region
 with a warning, not faulted, so a driver would have looked like it worked.
+
+### `uart.yaml`
+
+Needs something on the other end of UART1. `rtems_builder/tests/esp32c3/uart/echo.py`
+is that: it echoes what it receives **in upper case**, so a chip looping TX
+straight back to RX — a real fault — cannot pass, which a verbatim echo would.
+
+```sh
+python3 ../../../rtems_builder/tests/esp32c3/uart/echo.py /tmp/uart1.sock &
+../esp-idf-ci/venv/bin/esphome compile uart.yaml
+../../tools/rtems-ci-run.sh -M "CI-MARKER uart ok" \
+    .esphome/build/uarttest/uarttest.bin \
+    -- -serial unix:/tmp/uart1.sock
+```
+
+The second `-serial` is UART1; the console stays on the first, so the log is
+not travelling over the port under test.
+
+`number: 1`, not pins. Which pads a port reaches is fixed when the BSP is
+built, so there is nothing here to choose — the same decision still exists, one
+layer down.
+
+The checks worth pointing at are the last four: `peek_byte()` must return the
+first byte and **not consume it**, which is the whole of its contract and the
+easiest part to get wrong.
+
+```
+nothing is waiting before we send            ok
+the reply arrives                            ok
+read it                                      ok
+it is what the far end sent, not what we sent ok
+and nothing is left over                     ok
+two more arrive                              ok
+peek                                         ok
+peek returns the first byte                  ok
+peek does not consume it                     ok
+read both                                    ok
+the peeked byte is still first               ok
+now nothing is left                          ok
+```
+
+**`rx_buffer_size` matters here more than on other platforms.** Termios, not
+the driver, holds received bytes, and its default is 256. A reply longer than
+that, arriving faster than the main loop reads it, is silently truncated — 300
+bytes became 255 before this was wired up. Raise it for any protocol with long
+frames.
 
 ## What a pass means
 

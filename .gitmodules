@@ -1,10 +1,77 @@
-# Espressif's QEMU fork, needed only to run the ESP32-C3 lane.  Declared with
-# "update = none" so a plain clone does not pay for it; scripts/build_esp_qemu.sh
-# fetches it on demand.
+# Every input to this port is a submodule with a recorded pin, and none of them
+# are fetched by default.  A plain clone stays small; each script fetches what it
+# needs.  Fetch one explicitly with:
+#
+#     git submodule update --init --checkout --depth=1 src/<name>
+#
+# The pin is what makes a result attributable.  "branch" only says where to look
+# when a pin is deliberately moved forward:
+#
+#     git submodule update --remote src/esphome
+#
+# scripts/manifest.sh reports what is checked out against what is recorded here,
+# and exits non-zero if they disagree.
+
 [submodule "src/esp-qemu"]
 	path = src/esp-qemu
-	url = https://github.com/espressif/qemu.git
-	# Pinned at 40edccac, the release tag esp-develop-9.2.2-20260417.  The
-	# branch is the update channel; the tag is what was built and verified.
-	branch = esp-develop
+	# Espressif's QEMU fork, forked again so the two ESP32-C3 fixes this port
+	# needs are commits rather than patch files.  Branch esp32c3-rtems-fixes
+	# is esp-develop-9.2.2-20260417 plus:
+	#
+	#   3d3909d  hw/riscv/esp32c3_intmatrix: Implement INTR_STATUS_0 and _1
+	#   69094f5  hw/timer/esp_systimer: Carry the ns-to-ticks remainder
+	#
+	# Both are candidates for espressif/qemu and neither is RTEMS-specific.
+	# When they land upstream, point this back at espressif/qemu and drop the
+	# branch.
+	url = git@github.com:thesamprice/qemu.git
+	# The same over https, when there is no key on the machine:
+	#url = https://github.com/thesamprice/qemu.git
+	# Upstream, which does NOT contain the two fixes:
+	#url = https://github.com/espressif/qemu.git
+	branch = esp32c3-rtems-fixes
+	update = none
+
+[submodule "src/esphome"]
+	path = src/esphome
+	# The thing being ported.  Python validation and code generation plus the
+	# C++ runtime; the port touches both.  "dev" is upstream's default branch
+	# and its development line -- there is no "main" here.
+	url = https://github.com/esphome/esphome.git
+	branch = dev
+	update = none
+
+[submodule "src/osal"]
+	path = src/osal
+	# NASA OSAL.  A selective building block, not the foundation -- see
+	# docs/architecture.md for what it is and is not used for.  Its RTEMS
+	# backend is first-party and lives in src/os/rtems; there is no FreeRTOS
+	# backend upstream.
+	#
+	# Note the default branch is "dev", not "main".
+	url = https://github.com/nasa/osal.git
+	branch = dev
+	update = none
+
+[submodule "src/rtems"]
+	path = src/rtems
+	# RTEMS itself.  main IS the 7 development line; a release line gets a
+	# branch only once it is cut, so there is no "7".
+	url = https://gitlab.rtems.org/rtems/rtos/rtems.git
+	# Over ssh, which needs a key on gitlab.rtems.org port 2222:
+	#url = ssh://git@gitlab.rtems.org:2222/rtems/rtos/rtems.git
+	branch = main
+	update = none
+
+[submodule "src/rtems-libbsd"]
+	path = src/rtems-libbsd
+	# The FreeBSD-derived network stack, and the target of the M3 networking
+	# milestone on arm/xilinx_zynq_a9_qemu.  Branches are named for both the
+	# RTEMS series and the FreeBSD baseline, so the 7 line is 7-freebsd-14 and
+	# there is no main branch at all.
+	#
+	# Heavier than an MCU lwIP configuration; the footprint is recorded at the
+	# first networking milestone rather than argued about.
+	url = https://gitlab.rtems.org/rtems/pkg/rtems-libbsd.git
+	branch = 7-freebsd-14
 	update = none

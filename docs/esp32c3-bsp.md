@@ -24,10 +24,11 @@ cd src/rtems && ./waf configure -o build-esp32c3db \
 tools/esp32c3-run-tests.sh                        # finds the QEMU it built
 ```
 
-`scripts/build_esp_qemu.sh` fetches `src/esp-qemu` if it is not there, applies
-`patches/esp-qemu/`, configures and builds. The binary is left runnable in the
-build tree at `src/esp-qemu/build/qemu-system-riscv32`, which is where the test
-runner looks; installing it is optional and only worth doing to put it on a
+`scripts/build_esp_qemu.sh` fetches `src/esp-qemu` if it is not there, checks it
+is on its recorded commit, configures and builds. There is nothing to apply —
+the two QEMU fixes are commits on the pinned branch. The binary is left runnable
+in the build tree at `src/esp-qemu/build/qemu-system-riscv32`, which is where the
+test runner looks; installing it is optional and only worth doing to put it on a
 PATH.
 
 `-o build-esp32c3db` keeps this out of `build/`, so an mbv build configured in
@@ -75,6 +76,12 @@ rather than 632 times it.
 
 `bsp_start_copy_sections()` copies `.data` and the fast text and data sections
 out of the mapped flash window at run time. Nothing else is unpacked.
+
+Both QEMU fixes live as commits on `esp32c3-rtems-fixes` in the `src/esp-qemu`
+fork rather than as patch files, so fetching the submodule is all it takes to
+get a working emulator. Both are candidates for `espressif/qemu` and neither is
+RTEMS-specific; when they land upstream, the submodule points back at
+`espressif/qemu` and the branch goes away.
 
 ## Two things the stock QEMU gets wrong
 
@@ -148,17 +155,10 @@ return it:
 }
 ```
 
-`patches/esp-qemu/intmatrix-status.patch` is that plus the two register
-indices. It is a patch like any other here, applied by
-`scripts/apply_patches.sh` to the `src/esp-qemu` submodule. Still needed as of
-`esp-develop-9.2.2-20260417`: the released binaries and the `esp-develop` tip
-carry byte-identical unpatched files.
-
-`src/esp-qemu` is declared `update = none`, so on a default clone there is
-nothing there to patch. That is not a failure — the tree is meant to work
-without it — so `apply_patches.sh` now skips an unfetched opt-in submodule and
-stays green, unless you name the module on the command line, which is what
-`build_esp_qemu.sh` does after fetching it.
+That is commit `3d3909d` on the `esp32c3-rtems-fixes` branch of the
+`src/esp-qemu` submodule. Still needed as of `esp-develop-9.2.2-20260417`: the
+released binaries and the `esp-develop` tip carry byte-identical unpatched
+files.
 
 `tools/esp32c3-run-tests.sh` probes for the fix before running a suite.
 Finding out 632 times that QEMU cannot deliver an interrupt is not a test
@@ -291,9 +291,9 @@ const int64_t ticks = scaled / 1000;
 counter->frac = scaled % 1000;
 ```
 
-`patches/esp-qemu/systimer-counter-remainder.patch`. `sp69`'s 600 ms period
-goes from 599996499 ns to 600000375 ns, from 5.8 ppm short to 0.6 ppm long, and
-five tests move from fail to pass.
+Commit `69094f5` on the same branch. `sp69`'s 600 ms period goes from
+599996499 ns to 600000375 ns, from 5.8 ppm short to 0.6 ppm long, and five
+tests move from fail to pass.
 
 Note that this is not RTEMS-specific and not `-icount`-specific. Any guest that
 reads the systimer counter more often than once per 62.5 ns sees a slow clock;

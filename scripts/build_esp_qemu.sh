@@ -1,9 +1,10 @@
 #!/bin/bash
 #
-# Build the Espressif QEMU fork in src/esp-qemu, patched, for riscv/esp32c3db.
+# Build the QEMU in src/esp-qemu, which carries the ESP32-C3 fixes, for
+# riscv/esp32c3db.
 #
 # Usage:
-#   scripts/build_esp_qemu.sh              fetch, patch, configure, build
+#   scripts/build_esp_qemu.sh              fetch, configure, build
 #   scripts/build_esp_qemu.sh -j N         parallelism
 #   scripts/build_esp_qemu.sh -p DIR       also install to this prefix
 #   scripts/build_esp_qemu.sh -C           reconfigure from scratch
@@ -22,17 +23,20 @@
 # Why build rather than download
 # ------------------------------
 # Espressif publish binaries, and they run hello on this BSP, but they cannot
-# run anything that takes an interrupt.  hw/riscv/esp32c3_intmatrix.c
-# implements the map, priority, threshold, enable and type registers and
-# returns 0 for everything else -- INTERRUPT_CORE0_INTR_STATUS_0 and _1 at 0xf8
-# and 0xfc included.  Those two are how software finds out which peripheral
-# raised a CPU interrupt line, because the matrix maps 62 sources onto 31 lines
-# and the BSP shares lines deliberately.  Reading 0 there makes every interrupt
-# dispatch as vector 0, the invalid vector, so the first clock tick ends the run
-# in RTEMS_FATAL_SOURCE_SPURIOUS_INTERRUPT.
+# run anything that takes an interrupt, and their clock runs slow in proportion
+# to how often software reads it.  Two defects, both in the ESP32-C3 models:
 #
-# patches/esp-qemu/intmatrix-status.patch returns the value the model already
-# keeps for its own use.  See docs/esp32c3-bsp.md.
+#   3d3909d  the interrupt matrix does not implement INTR_STATUS_0/_1, which is
+#            how software identifies which peripheral raised a CPU line
+#   69094f5  the systimer discards the truncated remainder of every ns-to-ticks
+#            conversion, and every guest read is a conversion
+#
+# src/esp-qemu is a fork carrying both as commits on esp32c3-rtems-fixes, so
+# there is nothing to apply here -- fetching the submodule is enough.  Both are
+# candidates for espressif/qemu and neither is RTEMS-specific; when they land
+# upstream, point the submodule back and delete the branch.
+#
+# See docs/esp32c3-bsp.md for how each was found.
 #
 # Needs: a C toolchain, ninja, python3, pkg-config, glib and libgcrypt >= 1.8.
 
@@ -42,7 +46,6 @@ top="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$top" || exit 2
 
 src="$top/src/esp-qemu"
-patch="$top/patches/esp-qemu/intmatrix-status.patch"
 jobs="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
 prefix=""
 reconfigure=no
@@ -57,8 +60,6 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-[ -f "$patch" ] || { echo "$0: no $patch" >&2; exit 1; }
-
 # src/esp-qemu is declared "update = none", so a default clone has an empty
 # directory here and fetching it is this script's job rather than something the
 # caller has to know to do first.
@@ -68,15 +69,15 @@ if [ ! -d "$src/.git" ] && [ ! -f "$src/.git" ]; then
         || exit 1
 fi
 
-# Idempotent: a reverse check that succeeds means the patch is already in.
-if git -C "$src" apply --reverse --check "$patch" > /dev/null 2>&1; then
-    echo "patch already applied"
-elif git -C "$src" apply --check "$patch" > /dev/null 2>&1; then
-    git -C "$src" apply "$patch" || exit 1
-    echo "patch applied"
-else
-    echo "$0: $patch does not apply to src/esp-qemu and is not already applied" >&2
-    echo "  (checked out: $(git -C "$src" describe --tags --always 2>/dev/null))" >&2
+# The fixes are commits on the pinned branch, not patches, so the only thing
+# to check is that the submodule is actually on its recorded commit.  A
+# submodule left on some other revision would build a QEMU that no result here
+# can be attributed to.
+recorded=$(git -C "$top" ls-files -s src/esp-qemu | awk '{print $2}')
+actual=$(git -C "$src" rev-parse HEAD 2>/dev/null)
+if [ "$recorded" != "$actual" ]; then
+    echo "$0: src/esp-qemu is on $actual, not the recorded $recorded" >&2
+    echo "  git submodule update --checkout src/esp-qemu" >&2
     exit 1
 fi
 

@@ -49,6 +49,7 @@ reference node would turn the A/B into a comparison of something else.
 | `reference-node.yaml` | the same node builds and runs on both stacks |
 | `primitives.yaml` | time, mutexes, ISR wake, priority inheritance |
 | `gpio.yaml` | a pin declared in YAML is really driven, and its interrupt really arrives |
+| `i2c.yaml` | a real device on the bus answers, and one that is not there does not |
 
 ### `gpio.yaml`
 
@@ -81,6 +82,47 @@ and switching back is seen                   ok
 Requires the QEMU fork at `59917ba` or later; before that, `hw/gpio/esp32c3_gpio.c`
 modelled nothing but the strapping register and every one of these would have
 failed.
+
+### `i2c.yaml`
+
+Needs a slave on the command line:
+
+```sh
+../../tools/rtems-ci-run.sh -M "CI-MARKER i2c ok" \
+    -- -device tmp105,address=0x48
+```
+
+The TMP105 is a real device model, not a stub, so a value read from it came off
+a modelled bus rather than out of the driver.
+
+It reads the two **alarm limit** registers, not the temperature. They reset to
+75 °C and 80 °C: known, non-zero, and different from each other, so a bus stuck
+at zero fails and so does one returning the previous transfer's bytes. The
+temperature register is unusable here — `tmp105_reset()` zeroes it, and reset
+runs after `-device` applies its properties, so a command-line `temperature=`
+never survives to be read.
+
+The last check is the one that keeps the others honest: an address nothing
+answers on must come back `ERROR_NOT_ACKNOWLEDGED`. A bus that reported success
+there would report success whatever happened on the wire.
+
+```
+read T_LOW                                   ok
+T_LOW is 75 C, its reset value               ok
+read T_HIGH                                  ok
+T_HIGH is 80 C, so it differs from T_LOW     ok
+write the config register                    ok
+read the config register back                ok
+it holds what was written                    ok
+an address nothing answers on is NACKed      ok
+```
+
+With `scan: true` and an `at24c-eeprom` added at `0x50`, the scan reports both
+and nothing else out of the 112 addresses it probes.
+
+Requires the QEMU fork at `2546b01` or later. Before that the RISC-V machine had
+no I2C controller at all — accesses were absorbed by the catch-all IO region
+with a warning, not faulted, so a driver would have looked like it worked.
 
 ## What a pass means
 

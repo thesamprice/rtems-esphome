@@ -88,9 +88,14 @@ failed.
 Needs a slave on the command line:
 
 ```sh
+../esp-idf-ci/venv/bin/esphome compile i2c.yaml
 ../../tools/rtems-ci-run.sh -M "CI-MARKER i2c ok" \
+    .esphome/build/i2ctest/i2ctest.bin \
     -- -device tmp105,address=0x48
 ```
+
+Add `-device at24c-eeprom,address=0x50,rom-size=256` to see the scan report two
+devices rather than one.
 
 The TMP105 is a real device model, not a stub, so a value read from it came off
 a modelled bus rather than out of the driver.

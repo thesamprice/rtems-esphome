@@ -1,0 +1,25 @@
+# The RTEMS preferences store, on a filesystem.
+#
+# What this proves is the store: a value written comes back off disk, a key
+# never written does not, reset clears both memory and file, and a damaged file
+# is rejected whole rather than half-loaded.
+#
+# What it does NOT prove is surviving a reboot, because this board has no
+# persistent medium yet -- the filesystem is RAM. That half of #16 waits on
+# #42, and a RAM disk called persistence would be worse than saying so.
+
+esphome:
+  name: prefszynq
+  includes:
+    - zynq_prefs_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: 'rtems_prefs_test::run("/prefs.dat");'
+
+rtems:
+  bsp: arm/xilinx_zynq_a9_qemu
+  preferences_path: /prefs.dat
+
+logger:
+  level: DEBUG

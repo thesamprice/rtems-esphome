@@ -56,6 +56,7 @@ reference node would turn the A/B into a comparison of something else.
 | `zynq-ip.yaml` | addresses parse, format and compare, both families |
 | `zynq-api.yaml` | **a Home Assistant client talks to the node over the native API** |
 | `zynq-dns.yaml` | names resolve asynchronously without stalling the main loop |
+| `zynq-prefs.yaml` | preferences reach a file, come back off it, and a damaged one is refused |
 
 ### `gpio.yaml`
 
@@ -315,6 +316,52 @@ as a single gap the length of the timeout, and nowhere else.
 
 QEMU's user-mode networking answers DNS at `10.0.2.3`, which a static
 configuration has to be told about — `dns_setserver()` in the test.
+
+### `zynq-prefs.yaml`
+
+The preferences store, on a filesystem.
+
+```sh
+../esp-idf-ci/venv/bin/esphome compile zynq-prefs.yaml
+../../tools/zynq-lwip-run.sh -n -M "CI-MARKER prefs ok" \
+    .esphome/build/prefszynq/prefszynq.elf
+```
+
+`rtems: preferences_path: /prefs.dat` is what makes the store file-backed;
+without it preferences stay in memory, which is all a BSP with no filesystem
+can offer.
+
+Every read-back calls `load_store()` first, which replaces the in-memory map
+with whatever the file says. That is what makes this testable without a reboot
+— and it is also what the first version of this lane got wrong, so it is worth
+saying why the checks are shaped the way they are:
+
+* **The file is checked to exist before anything is read back.** Without that
+  check the read-backs pass out of the in-memory map on a store that never
+  wrote a byte. That is not hypothetical: `save()` did not set the dirty flag,
+  so `sync()` returned success without writing, and the lane reported thirteen
+  passes against a store that did not exist.
+* **Two corruptions, not one.** The store has two independent defences and a
+  single flipped byte only exercises whichever it lands in. A byte in a
+  record's length field is caught by the length check before the checksum is
+  ever computed — so with the checksum comparison deleted, a test that flips
+  only that byte still passes. The value-byte corruption is the one only the
+  checksum can catch.
+
+```
+a damaged record length loads nothing at all       ok
+a damaged value loads nothing at all               ok
+```
+
+**What this lane does not prove is surviving a reboot**, because this board's
+filesystem is RAM. That half of #16 waits on #42. A RAM disk called persistence
+would be worse than saying so.
+
+It also records a RTEMS deviation worth knowing: `rename()` does not replace an
+existing destination. `_rename_r()` evaluates the new path with
+`RTEMS_FS_EXCLUSIVE` and fails with `EEXIST` whatever the filesystem
+underneath, so the write-beside-and-rename that would make a replacement atomic
+has to unlink first.
 
 ## What a pass means
 

@@ -1,0 +1,85 @@
+# The A side of the A/B.
+#
+# This is deliberately the smallest configuration that exercises what an RTEMS
+# backend has to reproduce first: startup, the logger, the scheduler, and the
+# normal component lifecycle.  No networking, no hardware, nothing that needs a
+# peripheral QEMU may or may not model.
+#
+# Its job is to fail when a common-code refactor breaks the existing ESP-IDF
+# backend.  Rule 7 in CONTRIBUTING.md says every refactor commit must still
+# build ESP-IDF; this is how that is checked rather than asserted.
+#
+# The ESP32-C3 rather than the original ESP32 because the C3 is RISC-V and so
+# shares an architecture with the RTEMS lane, which makes an A/B between them
+# about the runtime rather than about the instruction set.  esp-idf rather than
+# Arduino because Arduino is not a framework RTEMS will ever be compared
+# against.
+
+esphome:
+  name: reference-node
+  # Printed once at startup and matched by the harness.  A marker the firmware
+  # emits itself is worth more than inferring liveness from log noise, which
+  # changes between releases.
+  on_boot:
+    priority: -100
+    then:
+      # Level matters: logger.log defaults to DEBUG and the logger below is at
+      # INFO, so a marker left at the default would never be printed and the
+      # harness would time out waiting for firmware that was working fine.
+      - logger.log:
+          level: INFO
+          format: "CI-MARKER boot ok"
+
+esp32:
+  board: esp32-c3-devkitm-1
+  variant: esp32c3
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+  # Not optional under QEMU, and not a preference.
+  #
+  # ESPHome defaults the C3 to the USB Serial/JTAG console.  QEMU models that
+  # peripheral as a stub -- reads return 0, writes are discarded, and it is
+  # never attached to a chardev, so no -serial index reaches it.  Left at the
+  # default the ROM banner appears, the second stage bootloader is entered, and
+  # then nothing is ever heard again.
+  #
+  # Setting it here rather than through sdkconfig_options matters: ESPHome's
+  # logger chooses the console itself and generates the matching calls, so
+  # overriding CONFIG_ESP_CONSOLE_* underneath it produces a firmware that does
+  # not link -- logger_esp32.cpp still references
+  # usb_serial_jtag_vfs_set_rx_line_endings, which the UART build does not
+  # provide.
+  #
+  # The RTEMS BSP hits the same trap from the other direction; see
+  # ESPRESSIF_USE_USB_CONSOLE in config_esp32c3db.ini.  It is a property of
+  # QEMU's C3 model, not of either operating system, which is why it catches
+  # both.
+  hardware_uart: UART0
+
+sensor:
+  - platform: template
+    name: "Counter"
+    id: ci_counter
+    update_interval: 1s
+    lambda: |-
+      static float counter = 0;
+      return ++counter;
+    on_value:
+      # Third update means the scheduler has run a periodic component at least
+      # three times, which is the cheapest evidence that time is advancing and
+      # the main loop is alive rather than merely reaching setup().
+      - if:
+          condition:
+            lambda: 'return id(ci_counter).state >= 3;'
+          then:
+            - logger.log:
+                level: INFO
+                format: "CI-MARKER scheduler ok"
+
+binary_sensor:
+  - platform: template
+    name: "Alive"
+    lambda: "return true;"

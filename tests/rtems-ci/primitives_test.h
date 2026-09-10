@@ -334,6 +334,139 @@ inline void test_wake_stress() {
   }
 }
 
+// --- priority inheritance ---------------------------------------------------
+// Mutex is built RTEMS_BINARY_SEMAPHORE | RTEMS_PRIORITY | RTEMS_INHERIT_PRIORITY
+// specifically to stop priority inversion, and those flags have never been
+// exercised -- everything so far contends with one task and no timing pressure.
+//
+// The classic three-task inversion: a low-priority task holds the mutex, a
+// medium-priority task spins and would starve it, and a high-priority task
+// waits for the mutex.  Without inheritance the high task is blocked for as
+// long as the medium task runs.  With it, the holder is boosted above the
+// spinner, finishes, and releases.
+//
+// RTEMS priorities: lower number is higher priority.
+#define PI_PRIO_HIGH 50
+#define PI_PRIO_MEDIUM 100
+#define PI_PRIO_LOW 150
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static esphome::Mutex *g_pi_mutex = nullptr;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static volatile bool g_pi_low_holds = false;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static volatile bool g_pi_medium_spinning = false;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static volatile bool g_pi_high_done = false;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static volatile uint64_t g_pi_block_ns = 0;
+
+/// Busy wait without yielding.  A delay() here would hand the CPU over and
+/// destroy the scenario: the point is to hold the processor.
+inline void busy_wait_ms(uint32_t ms) {
+  const uint64_t end = rtems_clock_get_uptime_nanoseconds() + (uint64_t) ms * 1000000ULL;
+  while (rtems_clock_get_uptime_nanoseconds() < end) {
+  }
+}
+
+extern "C" inline rtems_task pi_low_task(rtems_task_argument arg) {
+  (void) arg;
+  g_pi_mutex->lock();
+  g_pi_low_holds = true;
+  // Hold it across work that needs the CPU, for long enough that the other two
+  // tasks reliably reach their part of the scenario first -- they poll on a
+  // tick, so anything near the tick period races. Without inheritance the
+  // medium task preempts here and this never finishes until the spinner stops.
+  busy_wait_ms(150);
+  g_pi_mutex->unlock();
+  g_pi_low_holds = false;
+  rtems_task_delete(RTEMS_SELF);
+}
+
+extern "C" inline rtems_task pi_medium_task(rtems_task_argument arg) {
+  (void) arg;
+  while (!g_pi_low_holds) {
+    rtems_task_wake_after(1);
+  }
+  g_pi_medium_spinning = true;
+  busy_wait_ms(600);
+  g_pi_medium_spinning = false;
+  rtems_task_delete(RTEMS_SELF);
+}
+
+extern "C" inline rtems_task pi_high_task(rtems_task_argument arg) {
+  (void) arg;
+  // Both conditions: the scenario only exists while the low task still holds
+  // the mutex AND the medium task is spinning. Waiting on the spinner alone
+  // let this run after the holder had already released, which measured
+  // nothing and passed.
+  while (!(g_pi_medium_spinning && g_pi_low_holds)) {
+    rtems_task_wake_after(1);
+  }
+  const uint64_t before = rtems_clock_get_uptime_nanoseconds();
+  g_pi_mutex->lock();
+  g_pi_block_ns = rtems_clock_get_uptime_nanoseconds() - before;
+  g_pi_mutex->unlock();
+  g_pi_high_done = true;
+  rtems_task_delete(RTEMS_SELF);
+}
+
+inline void test_priority_inheritance() {
+  ESP_LOGI(TAG, "priority inheritance:");
+
+  esphome::Mutex m;
+  g_pi_mutex = &m;
+  g_pi_low_holds = false;
+  g_pi_medium_spinning = false;
+  g_pi_high_done = false;
+  g_pi_block_ns = 0;
+
+  struct {
+    const char *name;
+    rtems_task_priority prio;
+    rtems_task_entry entry;
+  } tasks[] = {
+      {"PILO", PI_PRIO_LOW, pi_low_task},
+      {"PIME", PI_PRIO_MEDIUM, pi_medium_task},
+      {"PIHI", PI_PRIO_HIGH, pi_high_task},
+  };
+
+  bool created = true;
+  for (auto &t : tasks) {
+    rtems_id id = RTEMS_INVALID_ID;
+    if (rtems_task_create(rtems_build_name(t.name[0], t.name[1], t.name[2], t.name[3]), t.prio,
+                          RTEMS_MINIMUM_STACK_SIZE * 4, RTEMS_DEFAULT_MODES, RTEMS_DEFAULT_ATTRIBUTES,
+                          &id) != RTEMS_SUCCESSFUL) {
+      created = false;
+      break;
+    }
+    rtems_task_start(id, t.entry, 0);
+  }
+  check(created, "three tasks at three priorities created");
+  if (!created) {
+    return;
+  }
+
+  for (int i = 0; i < 1000 && !g_pi_high_done; ++i) {
+    esphome::delay(1);
+  }
+  check(g_pi_high_done, "the high-priority task acquired the mutex");
+  if (!g_pi_high_done) {
+    return;
+  }
+
+  const uint32_t block_ms = static_cast<uint32_t>(g_pi_block_ns / 1000000ULL);
+  ESP_LOGI(TAG, "       high-priority task blocked for %ums", static_cast<unsigned>(block_ms));
+  // The holder needs 150ms of CPU; the spinner holds the processor for 600ms.
+  // Blocking for something near 150 means the holder was boosted past the
+  // spinner and finished -- inheritance working. Blocking for ~600 would mean
+  // it was not, and the inversion is real. The threshold sits between the two
+  // rather than near either, so a result close to it is a reason to look
+  // rather than a pass.
+  check(block_ms > 0, "the high-priority task actually blocked");
+  check(block_ms < 400, "blocked for the holder's work, not the spinner's");
+}
+
 inline void run() {
   ESP_LOGI(TAG, "PRIMITIVES start");
   g_failures = 0;
@@ -342,6 +475,7 @@ inline void run() {
   test_isr_context();
   test_isr_wake();
   test_wake_stress();
+  test_priority_inheritance();
   if (g_failures == 0) {
     ESP_LOGI(TAG, "PRIMITIVES ok");
   } else {

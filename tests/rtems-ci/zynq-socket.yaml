@@ -1,0 +1,31 @@
+# ESPHome's own socket backend, on RTEMS, over rtems-lwip.
+#
+# The stack underneath this is proven separately by tests/zynq-lwip/, which
+# talks to lwip directly.  What this adds is that ESPHome's socket layer --
+# the one every network component is built on -- works on top of it.
+#
+# arm/xilinx_zynq_a9_qemu, because that is where there is a network at all.
+# The ESP32-C3 has no NIC QEMU can give it; see rtems-esphome#30.
+#
+#     python3 - <<'PY' &   # something to connect to it
+#     PY
+#     ../../tools/zynq-lwip-run.sh .esphome/build/sockzynq/sockzynq.elf
+
+esphome:
+  name: sockzynq
+  includes:
+    - zynq_socket_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_socket_test::run();"
+
+rtems:
+  bsp: arm/xilinx_zynq_a9_qemu
+
+logger:
+  level: DEBUG
+
+# Pulled in explicitly: nothing else in this configuration asks for it, and
+# the point of the test is the socket layer itself.
+socket:

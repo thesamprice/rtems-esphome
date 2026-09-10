@@ -10,6 +10,7 @@
 #   -o DIR    output dir           (default: ./zynq-lwip-results.<timestamp>)
 #   -t SECS   hard timeout         (default: 90)
 #   -p PORT   host port to forward (default: 5555)
+#   -M TEXT   the marker that means success (default: "CI-MARKER net ok")
 #
 # Why this is not rtems-ci-run.sh
 #   That harness boots a raw flash image with "-drive if=mtd", which is the
@@ -34,13 +35,15 @@ QEMU=${QEMU_ARM:-qemu-system-arm}
 OUT=""
 TMO=90
 PORT=5555
+MARKER="CI-MARKER net ok"
 
-while getopts "q:o:t:p:" opt; do
+while getopts "q:o:t:p:M:" opt; do
   case $opt in
     q) QEMU=$OPTARG;;
     o) OUT=$OPTARG;;
     t) TMO=$OPTARG;;
     p) PORT=$OPTARG;;
+    M) MARKER=$OPTARG;;
     *) exit 2;;
   esac
 done
@@ -91,7 +94,7 @@ done
 kill -9 $qpid 2>/dev/null
 wait $qpid 2>/dev/null
 
-if grep -q "CI-MARKER net ok" "$log" 2>/dev/null; then
+if grep -qF "$MARKER" "$log" 2>/dev/null; then
   verdict=PASS
 elif grep -q "failure(s)" "$log" 2>/dev/null; then
   verdict=FAIL

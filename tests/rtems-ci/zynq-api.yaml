@@ -1,0 +1,27 @@
+esphome:
+  name: apizynq
+
+rtems:
+  bsp: arm/xilinx_zynq_a9_qemu
+  # QEMU's user-mode network: the guest sits at 10.0.2.15 behind a NAT with the
+  # gateway at 10.0.2.2.  Static rather than DHCP, so a failure here is this
+  # port's and not QEMU's DHCP server's.
+  network:
+    address: 10.0.2.15
+    subnet: 255.255.255.0
+    gateway: 10.0.2.2
+
+logger:
+  level: DEBUG
+
+network:
+
+api:
+
+sensor:
+  - platform: template
+    name: "RTEMS Counter"
+    update_interval: 500ms
+    lambda: |-
+      static float value = 0;
+      return ++value;

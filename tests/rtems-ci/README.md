@@ -54,6 +54,7 @@ reference node would turn the A/B into a comparison of something else.
 | `zynq-scheduler.yaml` | the same node runs on a second BSP, on a different architecture |
 | `zynq-socket.yaml` | ESPHome's own socket layer accepts a connection over lwip |
 | `zynq-ip.yaml` | addresses parse, format and compare, both families |
+| `zynq-api.yaml` | **a Home Assistant client talks to the node over the native API** |
 
 ### `gpio.yaml`
 
@@ -255,6 +256,38 @@ valid address here and a rejected one on a platform whose arm uses lwip's
 `is_connected()` is also checked, and expected to be **false**: no interface is
 brought up in this configuration, and the platform asks the stack rather than
 assuming a link the way host does.
+
+### `zynq-api.yaml`
+
+The one that means something. A real `aioesphomeapi` client — the same library
+Home Assistant uses — connects to the node and completes the protocol.
+
+```sh
+../esp-idf-ci/venv/bin/esphome compile zynq-api.yaml
+../../tools/zynq-lwip-run.sh -p 6053 \
+    -c "$PWD/../esp-idf-ci/venv/bin/python $PWD/api_client.py" \
+    .esphome/build/apizynq/apizynq.elf
+```
+
+`-c` hands the verdict to the client's exit status, because the guest's own log
+cannot say whether a protocol exchange it is only one end of actually worked.
+
+```
+ok   handshake completed
+ok   device info: name='apizynq' model='xilinx_zynq_a9_qemu' manufacturer='RTEMS'
+ok   entity metadata: ['RTEMS Counter']
+ok   states arrive and advance: [223.0, 224.0, 225.0, 226.0]
+ok   disconnected
+ok   reconnected after a disconnect
+```
+
+The reconnect is not decoration: a node that leaks its listening socket, or
+leaves a half-closed connection in the table, passes everything above it and
+fails there.
+
+**`rtems: network:` brings the interface up**, because there is no `wifi:` or
+`ethernet:` for this platform — which controller a board has is decided when
+the BSP is built, so all a configuration can say is the address.
 
 ## What a pass means
 

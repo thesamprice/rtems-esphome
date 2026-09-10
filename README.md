@@ -29,19 +29,21 @@ is somewhere to run it without hardware in the loop.
 | RTEMS builds for `riscv/esp32c3db` | 632 test executables, `riscv-rtems7-gcc` 15.2.0 |
 | Boots under QEMU | ROM direct boot, console on UART0 |
 | Clock, interrupts | working — after the QEMU fix below |
-| Testsuite | 419 pass, 14 xfail, 26 fail of 459 |
+| Testsuite | 420 pass, 14 xfail, 25 fail of 459 |
 
-The failures are almost all the part being small: 320 KiB of RAM is not enough
-for the filesystem tests to allocate a RAM disk. One, `psxstat`, is genuinely
-unexplained; one, `ttest01`, fails on every architecture upstream.
-`docs/esp32c3-bsp.md` has the full breakdown.
+Nothing in the failures is unexplained. 24 are the part being small — 320 KiB
+of RAM is not enough for the filesystem tests to allocate a RAM disk — and
+`ttest01` fails on every architecture upstream. `docs/esp32c3-bsp.md` has the
+full breakdown, including three readings of these numbers that were confidently
+wrong before they were right.
 
 Nothing is running on real silicon yet. Everything above is QEMU.
 
 ## What it took
 
-Three fixes, all written up in `docs/esp32c3-bsp.md`, all candidates for their
-upstreams:
+Four changes, all written up in `docs/esp32c3-bsp.md`. Two are QEMU defects
+worth sending upstream, one is an RTEMS BSP defect, and one is a backport of a
+fix that is already upstream:
 
 **`patches/esp-qemu/intmatrix-status.patch`** — QEMU's ESP32-C3 interrupt
 matrix does not implement `INTERRUPT_CORE0_INTR_STATUS_0` and `_1`. Those are
@@ -55,6 +57,11 @@ converted elapsed nanoseconds to counter ticks with an integer division and then
 discarded the remainder. A tick is 62.5 ns and every guest read is an update, so
 the counter ran slow in proportion to how often software looked at it. Five
 tests move from fail to pass.
+
+**`patches/rtems/psxstat-statvfs-expect-success.patch`** — a backport, not a
+local fix. IMFS gained a real `statvfs` handler upstream in 2025 and `psxstat`
+was not updated until 2026-07-29; the RTEMS revision used here is pinned between
+those two commits, so the test fails on every BSP. Drop it when the pin advances.
 
 **`patches/rtems/esp32c3-systimer-frequency.patch`** — the BSP declared the
 system timer at `16 * 1024 * 1024` Hz under a comment saying 16 MHz. It is 16

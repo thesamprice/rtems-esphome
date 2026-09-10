@@ -62,8 +62,15 @@ jobs:
           # libgcrypt is not optional: the esp32c3 machine always instantiates
           # its AES/RSA/DS devices and meson only compiles those when gcrypt is
           # found. See scripts/build_esp_qemu.sh.
+          # libslirp-dev is needed because QEMU's configure enables slirp when
+          # it can and then fails on the missing header. It is not needed by the
+          # esp32c3 machine, but it will be if #30's networking spike ever wants
+          # user-mode networking, so install it rather than --disable-slirp.
+          # Homebrew supplies it as a dependency on macOS, which is why this
+          # only appeared on a runner.
           sudo apt-get install -y ninja-build pkg-config libglib2.0-dev \
-                                  libgcrypt20-dev python3-venv flex bison
+                                  libgcrypt20-dev libslirp-dev python3-venv \
+                                  flex bison
       - name: Build QEMU
         if: steps.cache.outputs.cache-hit != 'true'
         run: scripts/build_esp_qemu.sh -j "$(nproc)"

@@ -93,7 +93,11 @@ IMAGE=${1:-}
 [ -n "$IMAGE" ] || { echo "error: no image given" >&2; exit 2; }
 shift || true
 
-# Anything after -- goes to QEMU untouched.
+# Anything after -- goes to QEMU untouched.  Expanded below as
+# ${EXTRA[@]+"${EXTRA[@]}"} rather than "${EXTRA[@]}": bash 3.2, which is what
+# /bin/bash is on macOS, treats the latter as an unbound variable under set -u
+# when the array is empty, and the failure is silent -- QEMU is simply never
+# started.
 EXTRA=()
 if [ "${1:-}" = "--" ]; then
   shift
@@ -123,7 +127,7 @@ rm -f "$log"
 "$QEMU" -M esp32c3 -display none -monitor none -no-reboot $ICOUNT_ARGS $DATA_ARGS \
   -serial file:"$log" \
   -drive file="$flash",if=mtd,format=raw \
-  "${EXTRA[@]}" \
+  ${EXTRA[@]+"${EXTRA[@]}"} \
   > "$OUT/qemu.out" 2> "$OUT/qemu.err" &
 qpid=$!
 

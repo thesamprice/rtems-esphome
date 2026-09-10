@@ -143,6 +143,39 @@ networking half of the recommendation is unchanged and is stronger now than
 when it was written, because the OpenCores driver gap is a measured absence
 rather than an assumption.
 
+## Where the port code lives
+
+Both forked, both for the same reason: the work ends up as commits shaped for a
+pull request rather than as patch files that have to be turned into one later.
+
+| | fork | branch |
+|---|---|---|
+| `src/esphome` | `thesamprice/esphome` | `rtems` |
+| `src/esp-qemu` | `thesamprice/qemu` | `esp32c3-rtems-fixes` |
+
+`patches/` stays for what it is good at: a handful of small changes against a
+tree we do not intend to carry a branch of. Today that is two RTEMS patches —
+one real BSP fix and one backport of an upstream commit our pin predates.
+
+A platform backend is not that. It adds a platform component, a
+`core/wake/wake_rtems.*`, a Python build target, a HAL header and `USE_RTEMS`
+through `defines.h`. Applying a diff that size on every build, and rebasing it
+by hand against a tree that moves daily, is the failure mode `patches/` exists
+to avoid rather than an instance of it.
+
+ESPHome takes new platforms upstream — Zephyr and LibreTiny both arrived that
+way — so the end state is a pull request, and a fork is the form that ends in.
+When a change lands upstream, point the submodule back and drop the branch.
+
+Out-of-tree `external_components` cannot host this: a *platform* is not a
+component. `core/hal.h` dispatches on `USE_<platform>` to
+`components/<platform>/hal.h`, and `defines.h` has to know the platform exists.
+Neither is reachable from outside the tree.
+
+Upstream `dev` moves fast. Rebase deliberately and record the new pin, because
+the pin is what makes a result attributable — `scripts/manifest.sh` is the check
+that a number and a tree correspond.
+
 ## Emulator lanes
 
 Two, side by side:

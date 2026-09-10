@@ -1,0 +1,34 @@
+# Sends and receives over a real serial port through ESPHome's UART stack.
+#
+# UART1, not UART0: the console is on UART0, and a test that logged over the
+# port it is testing would be reading its own output back.
+#
+# There is no tx_pin:/rx_pin: because which pads a port reaches is fixed when
+# the BSP is built. The port is chosen by number, which is what every other
+# platform is really choosing when it picks pins.
+#
+# QEMU supplies the far end:
+#
+#     -serial file:<console>  -serial unix:/tmp/uart1.sock
+#
+# with a host process on that socket echoing what it receives in upper case.
+
+esphome:
+  name: uarttest
+  includes:
+    - uart_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_uart_test::run(id(port));"
+
+rtems:
+  bsp: riscv/esp32c3db
+
+logger:
+  level: DEBUG
+
+uart:
+  id: port
+  number: 1
+  baud_rate: 115200

@@ -2,21 +2,29 @@
 
 // network/ip_address.h on RTEMS, both address families.
 //
-// The header's POSIX arm is reused here rather than a new one written for
-// RTEMS, on the grounds that it is <arpa/inet.h>, struct in_addr and
-// inet_pton, with nothing host-specific about it. This is what checks that
-// claim: a reused arm that compiles but parses wrongly would be worse than a
-// new one.
+// RTEMS uses the *lwIP* arm of that header, not the POSIX one, even though its
+// sockets are POSIX. The POSIX arm defines its own ip_addr_t out of struct
+// in_addr, which collides outright with lwIP's the moment anything includes
+// both -- and something does here, because the stack underneath is lwIP and
+// components reach it for DNS.
+//
+// So this checks the lwIP arm on RTEMS: a reused arm that compiles but parses
+// wrongly would be worse than a new one.
 
 #include "esphome/components/network/ip_address.h"
 #include "esphome/components/network/util.h"
 #include "esphome/core/log.h"
+
+#include <cstring>
 
 namespace rtems_ip_test {
 
 static const char *const TAG = "ip_test";
 
 static int failures = 0;
+
+/// The lwIP arm formats through str_to(); there is no str().
+static const char *fmt(const esphome::network::IPAddress &a, char *buf) { return a.str_to(buf); }
 
 static void check(const char *what, bool ok) {
   ESP_LOGI(TAG, "%-46s %s", what, ok ? "ok" : "FAIL");
@@ -34,9 +42,10 @@ static void run() {
   IPAddress v4("192.168.7.31");
   check("an IPv4 literal parses", v4.is_set());
   check("it is classified v4", v4.is_ip4() && !v4.is_ip6());
-  check("it formats back to itself", v4.str() == "192.168.7.31");
-  if (v4.str() != "192.168.7.31") {
-    ESP_LOGI(TAG, "     got '%s'", v4.str().c_str());
+  char b1[esphome::network::IP_ADDRESS_BUFFER_SIZE];
+  check("it formats back to itself", strcmp(fmt(v4, b1), "192.168.7.31") == 0);
+  if (strcmp(fmt(v4, b1), "192.168.7.31") != 0) {
+    ESP_LOGI(TAG, "     got '%s'", fmt(v4, b1));
   }
 
   // The octet constructor must agree with the parser, which is the property
@@ -44,7 +53,10 @@ static void run() {
   // what reusing an arm written for another platform risks.
   IPAddress v4_octets(192, 168, 7, 31);
   check("the octet form equals the parsed form", v4_octets == v4);
-  check("and formats the same", v4_octets.str() == v4.str());
+  {
+    char a[esphome::network::IP_ADDRESS_BUFFER_SIZE], b[esphome::network::IP_ADDRESS_BUFFER_SIZE];
+    check("and formats the same", strcmp(fmt(v4_octets, a), fmt(v4, b)) == 0);
+  }
 
   IPAddress v4_other("192.168.7.32");
   check("a different address is not equal", !(v4_other == v4));
@@ -54,9 +66,12 @@ static void run() {
   IPAddress v6("2001:db8::1");
   check("an IPv6 literal parses", v6.is_set());
   check("it is classified v6", v6.is_ip6() && !v6.is_ip4());
-  check("it formats back to itself", v6.str() == "2001:db8::1");
-  if (v6.str() != "2001:db8::1") {
-    ESP_LOGI(TAG, "     got '%s'", v6.str().c_str());
+  {
+    char b[esphome::network::IP_ADDRESS_BUFFER_SIZE];
+    check("it formats back to itself", strcmp(fmt(v6, b), "2001:db8::1") == 0);
+    if (strcmp(fmt(v6, b), "2001:db8::1") != 0) {
+      ESP_LOGI(TAG, "     got '%s'", fmt(v6, b));
+    }
   }
 
   IPAddress v6_same("2001:0db8:0000:0000:0000:0000:0000:0001");
@@ -74,18 +89,20 @@ static void run() {
   check("a non-address does not parse", !IPAddress("not-an-address").is_set());
   check("an out-of-range octet does not parse", !IPAddress("192.168.7.999").is_set());
 
-  // Three-part shorthand is accepted, and that is correct: inet_aton() has
-  // always read "a.b.c" as a.b plus a 16-bit c, so 192.168.7 is 192.168.0.7.
-  // Asserted rather than left alone because it is surprising, and because it
-  // is a property of the POSIX parser rather than of this port -- the same
-  // string means something else on a platform whose arm uses lwip's
-  // ipaddr_aton, which rejects it.
+  // Three-part shorthand is ACCEPTED here too, as 192.168.0.7 -- lwIP's
+  // ip4addr_aton is a full inet_aton clone, "a.b.c" meaning a.b plus a 16-bit
+  // c. I expected lwIP to be the strict one and it is not, so both arms agree
+  // and #66's premise was wrong.
+  //
+  // Asserted rather than assumed, twice over now: it is surprising, and the
+  // consequence is that a mistyped address in a configuration becomes a
+  // plausible wrong one on every platform rather than an error on some.
   IPAddress shorthand("192.168.7");
-  check("three-part shorthand parses, as inet_aton defines it",
-        shorthand.is_set());
+  check("three-part shorthand parses here too", shorthand.is_set());
   check("and means a.b.0.c", shorthand == IPAddress(192, 168, 0, 7));
   if (shorthand.is_set()) {
-    ESP_LOGI(TAG, "     '192.168.7' parsed as '%s'", shorthand.str().c_str());
+    char b[esphome::network::IP_ADDRESS_BUFFER_SIZE];
+    ESP_LOGI(TAG, "     '192.168.7' parsed as '%s'", fmt(shorthand, b));
   }
 
   // --- the platform's own view of the link --------------------------------

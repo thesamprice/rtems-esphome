@@ -81,12 +81,35 @@
 	branch = main
 	update = none
 
+[submodule "src/rtems-lwip"]
+	path = src/rtems-lwip
+	# The network stack M3 uses.  Chosen over libbsd in #50 and confirmed by
+	# building it: 391 files against libbsd's 5,602, an explicit
+	# arm/xilinx_zynq_a9_qemu target, and sockets that are RTEMS file
+	# descriptors, so select() spans sockets and files and ESPHome's existing
+	# socket backend needs no new implementation.
+	#
+	# Fetched from the GitHub mirror rather than gitlab.rtems.org.  Not a
+	# preference: gitlab has been refusing connections on port 2222 for the
+	# whole of this work, and treating that as a blocker cost #50 several
+	# sessions of being deferred for no reason.  The mirror is current --
+	# it was last pushed the same week.
+	#
+	# It has submodules of its own, lwip-upstream and rtems_waf, which
+	# ./waf configure needs, so this one is not useful shallow.
+	url = https://github.com/RTEMS/rtems-lwip.git
+	branch = main
+	update = none
+
 [submodule "src/rtems-libbsd"]
 	path = src/rtems-libbsd
-	# The FreeBSD-derived network stack, and the target of the M3 networking
-	# milestone on arm/xilinx_zynq_a9_qemu.  Branches are named for both the
-	# RTEMS series and the FreeBSD baseline, so the 7 line is 7-freebsd-14 and
-	# there is no main branch at all.
+	# The FreeBSD-derived stack.  Kept, not used: #50 chose lwip, and the
+	# reason is size -- 2.6M lines against lwip's 148k, which is not a
+	# candidate on a part with 320 KiB of RAM whatever it can do on a Zynq.
+	# Here so the comparison can be repeated rather than taken on trust.
+	#
+	# Branches are named for both the RTEMS series and the FreeBSD baseline,
+	# so the 7 line is 7-freebsd-14 and there is no main branch at all.
 	#
 	# Heavier than an MCU lwIP configuration; the footprint is recorded at the
 	# first networking milestone rather than argued about.

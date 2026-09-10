@@ -51,6 +51,7 @@ reference node would turn the A/B into a comparison of something else.
 | `gpio.yaml` | a pin declared in YAML is really driven, and its interrupt really arrives |
 | `i2c.yaml` | a real device on the bus answers, and one that is not there does not |
 | `uart.yaml` | bytes leave the port and the reply comes back |
+| `zynq-scheduler.yaml` | the same node runs on a second BSP, on a different architecture |
 
 ### `gpio.yaml`
 
@@ -175,6 +176,30 @@ the driver, holds received bytes, and its default is 256. A reply longer than
 that, arriving faster than the main loop reads it, is silently truncated — 300
 bytes became 255 before this was wired up. Raise it for any protocol with long
 frames.
+
+### `zynq-scheduler.yaml`
+
+`scheduler.yaml` with one line changed — `bsp: arm/xilinx_zynq_a9_qemu` instead
+of `riscv/esp32c3db`. Different architecture, different board, different
+emulator binary, no `#ifdef` anywhere.
+
+```sh
+../esp-idf-ci/venv/bin/esphome compile zynq-scheduler.yaml
+qemu-system-arm -no-reboot -nographic -M xilinx-zynq-a9 -m 256M \
+    -serial null -serial mon:stdio -net none \
+    -kernel .esphome/build/schedzynq/schedzynq.elf
+```
+
+Note it boots an **ELF through `-kernel`**, not a raw flash image. The build
+backend produces both; the ESP32-C3's direct-boot mode wants the binary and the
+Zynq wants the ELF, which is why the objcopy step is a named ninja rule rather
+than part of the link.
+
+This lane exists to make rule 2 falsifiable rather than aspirational. It has
+already earned that: the first attempt failed at the preprocessor, because
+`<bsp/gpio.h>` `#error`s unless the BSP defines `BSP_GPIO_PIN_COUNT`, and most
+BSPs — the Zynq among them — do not. Nothing on the ESP32-C3 could have found
+that.
 
 ## What a pass means
 

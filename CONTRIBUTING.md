@@ -71,3 +71,50 @@ defect no longer reproduces" and "this is fixed" are three different claims —
 say which one you have. When a test result comes from a machine under load or a
 run that was interrupted, say so rather than quoting the number as if it were
 clean.
+
+### Show the test can fail
+
+**Before believing a pass, break the thing under test and watch the test go
+red.** Then say so in the commit message, so nobody has to redo it.
+
+This is not defensive box-ticking. Every timing, concurrency and persistence
+test in this repository has had a first version that passed while measuring
+nothing, and none of them looked wrong:
+
+* Priority inheritance recorded a 0 ms block and passed, because the windows
+  were shorter than the tick the tasks polled on. Caught by asking why the
+  number was zero.
+* Wake latency read `0us` on every sample — the path is well under a
+  microsecond — and the ISR variant measured three logging calls.
+* `delay()` passed under `-icount`, where deterministic execution made it land
+  on exactly 50 ms every run. The real 43 ms return only appeared with icount
+  off.
+* The preferences lane reported thirteen passing checks against a store file
+  that was never written: `save()` did not set the dirty flag, `sync()`
+  returned success without writing, and every read-back came out of the
+  in-memory map. The two checks that touched the file were the only honest ones
+  in it.
+* The same lane's corrupt-store check passed with the checksum comparison
+  deleted. It flipped a byte that landed in a record's length field, which a
+  cheaper check rejects first, so the defence it claimed to test was never
+  reached.
+
+The shape is always the same: **a satisfied assertion and a meaningless
+measurement**. Four habits catch it.
+
+1. **Verify the test can fail.** Remove `RTEMS_INHERIT_PRIORITY`, delete the
+   checksum comparison, stub out the driver — then run. A test that still
+   passes is not testing what its name says.
+2. **Treat a suspiciously clean number as a defect until explained.** `0ms`,
+   `0us`, min == mean == max. The wake stress test legitimately reports
+   min == mean == max under icount, but that had to be worked out, not assumed.
+3. **Check the preconditions of the assertion, not only the assertion.** That
+   the file exists before reading it back; that the waiter blocked at all, not
+   only that it did not block too long. A read-back that can be satisfied from
+   a cache is not evidence about storage.
+4. **Aim each check at one defence.** Where code rejects bad input two ways, a
+   single malformed input only exercises whichever check runs first. Give each
+   one an input the others let through.
+
+Run timing assertions both with and without `-icount` (#47): each hides a
+different class of bug.

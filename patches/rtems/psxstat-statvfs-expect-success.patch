@@ -1,0 +1,36 @@
+Backport of upstream 4645e241a8 ("testsuites/psxstat: Expect statvfs() on IMFS
+to succeed"), 2026-07-29, already in origin/main.
+
+Not a local fix.  It is here only because the src/rtems pin is 139 commits
+behind origin/main and sits between the two upstream commits that have to
+travel together:
+
+  e618b20215  2025-06-11  gave IMFS a real .statvfs_h that returns 0
+  4645e241a8  2026-07-29  updated psxstat, which still expected ENOSYS
+
+Between those two, psxstat fails on every BSP, which is what our pin does.
+Drop this patch the moment the pin moves past 4645e241a8; keeping it after
+that will make apply_patches.sh report it as already applied, which is
+harmless but misleading.
+
+The .scn hunk of the upstream commit is omitted deliberately.  Nothing
+compares .scn files -- see CLAUDE.md -- and carrying it would only widen the
+diff against the pin.
+
+diff --git a/testsuites/psxtests/psxstat/test.c b/testsuites/psxtests/psxstat/test.c
+index 0f730c1109..e7fae78819 100644
+--- a/testsuites/psxtests/psxstat/test.c
++++ b/testsuites/psxtests/psxstat/test.c
+@@ -785,10 +785,9 @@ void test_statvfs( void )
+   status = mkdir( "/tmp", 0777 );
+   rtems_test_assert( status == 0 );
+ 
+-  puts( "statvfs, with valid path - expect ENOSYS" );
++  puts( "statvfs, with valid path - expect success" );
+   status = statvfs( "/tmp", &stat );
+-  rtems_test_assert( status == -1 );
+-  rtems_test_assert( errno == ENOSYS );
++  rtems_test_assert( status == 0 );
+ 
+   puts( "statvfs tested!" );
+ }

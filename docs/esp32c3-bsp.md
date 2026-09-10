@@ -311,61 +311,77 @@ overflow.
 
 459 tests, the whole suite less the performance families the runner defers by
 default (benchmarks, tmtests, psxtmtests, rhealstone, spintrcritical\*).
-`-j 2`, `-icount shift=0,sleep=off`, patched QEMU.
+`-j 4`, `-icount shift=0,sleep=off`, patched QEMU.
 
-| | before the counter fix | after |
-|---|---|---|
-| PASS | 414 | **419** |
-| XFAIL | 14 | 14 |
-| FAIL | 31 | **26** |
+| | first measured | after the QEMU counter fix | after the psxstat backport |
+|---|---|---|---|
+| PASS | 414 | 419 | **420** |
+| XFAIL | 14 | 14 | 14 |
+| FAIL | 31 | 26 | **25** |
 
-`patches/esp-qemu/systimer-counter-remainder.patch` moved five tests from fail
-to pass — `sp69`, `spcpucounter01`, `sptimecounter02`, `record04` and `ttest02`
-— and moved nothing the other way. The remaining 26 fall into three groups.
-
-**23 are the part being small.** 20 filesystem tests never get a RAM disk
-(`ramdisk_support.c: 55 rc == 0`), `fsdosfssync01` and `fsdosfsformat01` fail
-opening and formatting one, `fsrofs01` reports `buffer open failed: 6`, and
-`capture01` dies on `INTERNAL_ERROR_TOO_LITTLE_WORKSPACE`. 320 KiB is not
-enough for what those tests want to allocate. Nothing to fix in the BSP.
-
-**2 are the timecounter**, `sp69` and `sptimecounter02`, described above.
+Nothing moved backwards at any step. What is left divides cleanly, and none of
+it is unexplained:
 
 **24 are the part being small.** 20 filesystem tests never get a RAM disk
 (`ramdisk_support.c: 55 rc == 0`), `fsdosfssync01` and `fsdosfsformat01` fail
 opening and formatting one, `fsrofs01` reports `buffer open failed: 6`, and
 `capture01` dies on `INTERNAL_ERROR_TOO_LITTLE_WORKSPACE`. 320 KiB is not
-enough for what those tests want to allocate. Nothing to fix in the BSP.
+enough for what those tests want to allocate. There is nothing to fix in the
+BSP; this is the support manifest, not a defect list.
 
-**1 is upstream-known.** `ttest01` fails `test-malloc.c:75 *ctx->c == c`, and it
-fails on every architecture; it is on the mbv BSP's known-failure list too.
+**1 is upstream-known.** `ttest01` fails `test-malloc.c:75 *ctx->c == c` on
+every architecture, and is on the mbv BSP's known-failure list too.
 
-**1 is not explained.** `psxstat` fails `test.c:790 status == -1` — a mkdir that
-should have returned EACCES did not. It runs a long way, 48 KB of output, before
-that, and it is not a RAM disk failure, so it is not simply the part being
-small. This is the one left worth someone's time.
+### psxstat was the pin, not the BSP
 
-### What the earlier reading of these numbers got wrong
+Worth its own heading because the conclusion is about this repository's
+configuration rather than about the ESP32-C3.
 
-Two things, both worth keeping because both were confident and both were wrong.
+`psxstat` failed `test.c:790 status == -1`, asserting that `statvfs()` on a
+valid path returns `-1` with `ENOSYS`. Two upstream commits have to travel
+together for that to be right:
 
-`record04` and `ttest02` were recorded as `-icount` artifacts on the grounds
-that they failed with instruction counting and passed without it, at the same
-timeout in both directions. That correlation was real. The conclusion drawn
-from it — that icount is "not uniformly good here", unlike on mbv where it is
-what makes those same tests pass — was not. They were failing on the QEMU
-counter defect described above, and icount is simply the configuration that
-exposes it hardest: with virtual time advancing per instruction, consecutive
-counter reads land closest together, which is exactly where the truncation lost
-the most. Both pass with icount once the counter is fixed.
+| | | |
+|---|---|---|
+| `e618b20215` | 2025-06-11 | gave IMFS a real `.statvfs_h`; `IMFS_statvfs()` unconditionally returns 0 |
+| `4645e241a8` | 2026-07-29 | updated `psxstat`, which still expected `ENOSYS` |
 
-`spcpucounter01` was recorded as a hang. It was a truncated log from a run on a
-host that had run out of memory, and QEMU was killed before the rest reached the
-serial file. A truncated log and a hang look identical.
+The pin sits between them, so `psxstat` fails — and, as the second commit's own
+message says, it fails **on every BSP**, not just this one.
+`patches/rtems/psxstat-statvfs-expect-success.patch` backports the test change.
+The real fix is advancing `src/rtems`, which is 139 commits behind
+`origin/main`; drop the patch when the pin moves past `4645e241a8`.
 
-The general lesson is the same one twice: a correlation between a knob and a
-failure is not the mechanism, and the state of the machine is part of the
-evidence.
+### Three readings of these numbers that were wrong
+
+All three were confident, all three are worth keeping, and they fail the same
+way: a symptom was characterised instead of the failing thing being read.
+
+**`record04` and `ttest02` were called `-icount` artifacts.** They failed with
+instruction counting and passed without it, at the same timeout in both
+directions. The correlation was real; the conclusion that icount is "not
+uniformly good here", unlike on mbv where it is what makes those same tests
+pass, was not. They were failing on the QEMU counter defect above, and icount is
+simply the configuration that exposes it hardest — virtual time advancing per
+instruction puts consecutive counter reads closest together. Both pass with
+icount on now, and icount is no longer implicated in any failure here.
+
+**`spcpucounter01` was called a hang.** It was a truncated log from a run on a
+host that had run out of memory, where QEMU was killed before the rest reached
+the serial file. A truncated log and a hang look identical. It was a clean
+assertion failure, and gdb found it already sitting in `bsp_reset`.
+
+**`psxstat` was called a permissions failure** — "a mkdir that should have
+returned EACCES did not". That text was the last thing printed before the
+assertion, from an earlier section of the test; line 790 is in `test_statvfs()`
+and has nothing to do with permissions. Reading the line the assertion is on
+would have cost less than reading the log tail did.
+
+A fourth near-miss belongs with them: cross-checking `psxstat` against the mbv
+BSP showed `PASS`, which looked like evidence the defect was ESP32-C3 specific.
+That mbv build is from RTEMS `dbef4aefc2`, a different revision that already has
+the fix. A same-tree comparison is only evidence if it is actually the same
+tree; check the version string before drawing the conclusion.
 
 ## State
 
@@ -375,4 +391,5 @@ evidence.
 | `hello` | passes, on stock Espressif QEMU too |
 | `ticker` and interrupts | pass on the patched QEMU; fatal spurious interrupt without it |
 | `-icount shift=0,sleep=off` | works, on by default in the runner, and no longer implicated in any failure |
+| Unexplained failures | none. 24 are the part being small, 1 is upstream-known |
 | Evidence pipeline | not wired up. There is no `config_esp32c3db_fanalyzer.ini` or `_coverage.ini`, so `make fanalyzer` and `make coverage` will refuse; `make CONFIG=configs/config_esp32c3db.ini tests` also still calls `tools/mbv-run-tests.sh`, not the runner here |

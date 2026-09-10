@@ -15,7 +15,9 @@
 #   -q QEMU   qemu-system-riscv32   (default: $QEMU_ESP32C3 or src/esp-qemu/build/)
 #   -o DIR    output dir            (default: ./rtems-ci-results.<timestamp>)
 #   -t SECS   hard timeout          (default: 90)
-#   -m TEXT   extra required marker, repeatable
+#   -m TEXT   extra required marker, repeatable (added to the defaults)
+#   -M TEXT   required marker, repeatable, REPLACING the defaults -- for a
+#             config that does not print them, such as a self-test
 #   -I        disable instruction counting
 #
 # Exit status is 0 only if every required marker was seen and no failure
@@ -55,12 +57,15 @@ MARKERS=("CI-MARKER boot ok" "CI-MARKER scheduler ok")
 # rather than the banner.
 FAILSIGS='\*\*\* FATAL \*\*\*|fatal source:|RTEMS_FATAL_SOURCE|assertion .* failed'
 
-while getopts "q:o:t:m:I" opt; do
+replaced=0
+while getopts "q:o:t:m:M:I" opt; do
   case $opt in
     q) QEMU=$OPTARG;;
     o) OUT=$OPTARG;;
     t) TMO=$OPTARG;;
     m) MARKERS+=("$OPTARG");;
+    M) if [ $replaced = 0 ]; then MARKERS=(); replaced=1; fi
+       MARKERS+=("$OPTARG");;
     I) ICOUNT_ARGS="";;
     *) exit 2;;
   esac

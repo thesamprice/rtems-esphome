@@ -1,0 +1,20 @@
+# Runs the platform primitive self-test on the target.
+#
+# Separate from reference-node.yaml on purpose: that config exists to be
+# identical to the ESP-IDF lane's, and adding RTEMS-specific tests to it would
+# break the comparison it is for.
+
+esphome:
+  name: primitives
+  includes:
+    - primitives_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_primitives::run();"
+
+rtems:
+  bsp: riscv/esp32c3db
+
+logger:
+  level: DEBUG

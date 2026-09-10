@@ -41,18 +41,19 @@ Nothing is running on real silicon yet. Everything above is QEMU.
 
 ## What it took
 
-Four changes, all written up in `docs/esp32c3-bsp.md`. Two are QEMU defects
-worth sending upstream, one is an RTEMS BSP defect, and one is a backport of a
-fix that is already upstream:
+Four changes, all written up in `docs/esp32c3-bsp.md`. Two are QEMU defects,
+carried as commits on the `esp32c3-rtems-fixes` branch of the `src/esp-qemu`
+fork and both worth sending upstream. One is an RTEMS BSP defect. One is a
+backport of a fix that is already upstream:
 
-**`patches/esp-qemu/intmatrix-status.patch`** — QEMU's ESP32-C3 interrupt
+**`src/esp-qemu` commit `3d3909d`** — QEMU's ESP32-C3 interrupt
 matrix does not implement `INTERRUPT_CORE0_INTR_STATUS_0` and `_1`. Those are
 how software finds out which peripheral raised a CPU interrupt line, since the
 matrix maps 62 sources onto 31 lines. Without them every interrupt dispatches
 as the invalid vector and the first clock tick is a fatal spurious interrupt,
 so nothing past `hello` runs. Four lines; the model already keeps the value.
 
-**`patches/esp-qemu/systimer-counter-remainder.patch`** — QEMU's systimer
+**`src/esp-qemu` commit `69094f5`** — QEMU's systimer
 converted elapsed nanoseconds to counter ticks with an integer division and then
 discarded the remainder. A tick is 62.5 ns and every guest read is an update, so
 the counter ran slow in proportion to how often software looked at it. Five
@@ -75,7 +76,7 @@ Needs an RTEMS 7 RISC-V toolchain (`riscv-rtems7-gcc`), and for QEMU: ninja,
 python3, pkg-config, glib and libgcrypt >= 1.8.
 
 ```sh
-git clone --recursive https://github.com/thesamprice/rtems-esphome
+git clone https://github.com/thesamprice/rtems-esphome
 cd rtems-esphome
 
 # QEMU, fetched and patched for you.  ~10 minutes.
@@ -129,14 +130,23 @@ What is missing:
 ## Layout
 
 ```
-config_esp32c3db.ini    RTEMS BSP config for riscv/esp32c3db
-docs/esp32c3-bsp.md     how the BSP boots, what QEMU gets wrong, test results
-patches/esp-qemu/       fixes to Espressif's QEMU
-patches/rtems/          fixes to RTEMS
-scripts/build_esp_qemu.sh
+config_esp32c3db.ini      RTEMS BSP config for riscv/esp32c3db
+docs/architecture.md      standing decisions for the port
+docs/esp32c3-bsp.md       how the BSP boots, what QEMU gets wrong, test results
+patches/rtems/            fixes to RTEMS, as patch files
+scripts/build_esp_qemu.sh fetch and build the emulator
+scripts/manifest.sh       what is checked out vs what is recorded
 tools/esp32c3-run-tests.sh
-src/esp-qemu            Espressif QEMU, submodule, fetched on demand
+src/esp-qemu              Espressif QEMU + our two fixes
+src/esphome               the thing being ported
+src/osal                  NASA OSAL
+src/rtems                 RTEMS
+src/rtems-libbsd          the network stack for the M3 milestone
 ```
+
+Every submodule is declared `update = none` and none are fetched by a plain
+clone. `scripts/manifest.sh` reports what is checked out against what is
+recorded, and fails if a fetched submodule has drifted off its pin.
 
 ## Licence
 

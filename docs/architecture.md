@@ -89,26 +89,59 @@ optional deliverable *after* the RTEMS architecture is proven.
 
 ## Target BSPs
 
-**First: `arm/xilinx_zynq_a9_qemu`.** RTEMS documents both running the BSP under
-QEMU and a working libbsd Cadence GEM driver, including the QEMU NIC
-invocation. That is exactly the combination the first networking milestone
-needs.
+**First: `riscv/esp32c3db`.** It boots, it passes 420 of 459 RTEMS tests under
+Espressif's QEMU, and the toolchain and BSP already build — see
+`docs/esp32c3-bsp.md`. It is also the actual target: ESPHome runs on ESP32
+hardware, so porting to the real part is the point rather than a detour.
 
-**Second: an AArch64 QEMU BSP (`qemu_a53`/`qemu_a72`)** to prove the backend is
-portable rather than Zynq-shaped. A second unrelated BSP is the definition of
-architectural success.
+Two further reasons it is the right *first* BSP specifically:
+
+- **M1 and M2 need no networking at all.** Boot, time, synchronisation, wake,
+  logging and the scheduler are the whole of the first two milestones, and none
+  of them care what NIC the board has. The argument for Zynq A9 is entirely an
+  M3 argument, so spending it in M1 buys nothing.
+- **It is RISC-V, like the ESP-IDF reference lane.** Both sides of the A/B on
+  the same instruction set means a difference between them is a difference in
+  the runtime, which is the comparison worth having.
+
+**M3 networking: `arm/xilinx_zynq_a9_qemu`.** This is where the original
+reasoning still holds, and it holds for two concrete reasons rather than
+preference.
+
+RTEMS documents both QEMU execution and a working libbsd Cadence GEM driver on
+that BSP, including the QEMU NIC invocation — and notes that QEMU does not model
+the Cadence checksum offload completely, which is the kind of detail that only
+appears in a path someone actually tests.
+
+The ESP32-C3 has no such path. QEMU gives it an OpenCores Ethernet MAC at
+`0x600CD000`, an address the real chip has no MAC at — the C3 is WiFi and BLE
+only. **RTEMS has no OpenCores Ethernet driver**, and neither does FreeBSD, so
+libbsd does not inherit one; `ethoc` is a Linux driver. Networking on the C3
+lane would therefore mean writing a driver from scratch, for a device that does
+not exist on the silicon, to carry a stack whose footprint has to fit in 320
+KiB. All three of those are avoidable by doing M3 somewhere else.
+
+**Second BSP, for portability: whichever of the two is not first.** Doing the
+C3 first makes Zynq A9 serve double duty — it proves the backend is not
+C3-shaped *and* it carries the networking milestone. A second unrelated BSP is
+the definition of architectural success either way; the order does not weaken
+it.
 
 **Later, for HAL work: Raspberry Pi 4B**, which RTEMS documents with GPIO, UART,
 SPI, I²C and watchdog, and which also runs under QEMU.
 
-**ESP32-C3 (`riscv/esp32c3db`): the feasibility spike is answered — it boots.**
-The charter listed this as an open question. This repository is that spike: see
-`docs/esp32c3-bsp.md`. RTEMS runs on Espressif's ESP32-C3 QEMU model and passes
-most of its own testsuite, after one four-line QEMU fix. What is *not*
-established is networking on it — QEMU's esp32c3 machine models OPENCORES_ETH
-and does not emulate the radio, and the part has 320 KiB of RAM, so libbsd's
-footprint is an open question there. Zynq A9 remains the first committed
-networking target.
+### Why this is not what the feasibility study said
+
+The study put Zynq A9 first and listed the ESP32-C3 as an explicit feasibility
+spike, on the grounds that no primary source established that RTEMS'
+`esp32c3db` BSP and Espressif's QEMU were compatible.
+
+That spike is answered — they are, after two QEMU fixes. Once the C3 boots, the
+study's own reason for preferring Zynq first no longer applies to M1 and M2,
+because that reason was networking and those milestones have none. The
+networking half of the recommendation is unchanged and is stronger now than
+when it was written, because the OpenCores driver gap is a measured absence
+rather than an assumption.
 
 ## Emulator lanes
 
@@ -122,11 +155,18 @@ ESPHome YAML                       ESPHome YAML
 generated C++                      generated C++
      ▼                                  ▼
 ESP-IDF                            RTEMS platform
-FreeRTOS + lwIP                    OSAL + POSIX/libbsd + BSP
+FreeRTOS + lwIP                    OSAL + POSIX + BSP
      ▼                                  ▼
-Espressif QEMU                     QEMU Zynq A9
-ESP32 / ESP32-C3                   Cadence GEM
+Espressif QEMU                     Espressif QEMU
+ESP32-C3                           ESP32-C3
+
+                                   and from M3, for networking:
+                                   QEMU Zynq A9 + libbsd + Cadence GEM
 ```
+
+Both lanes on the same part through M1 and M2, which is the point: the same
+YAML, the same instruction set, the same emulator, and the only difference is
+the runtime underneath.
 
 The reference lane is not optional. Every common-code change must keep building
 and running the existing ESP-IDF backend, and Espressif's QEMU plus

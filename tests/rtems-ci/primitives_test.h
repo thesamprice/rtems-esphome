@@ -17,8 +17,29 @@
 #include "esphome/core/hal.h"
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
+#include "esphome/core/wake.h"
 
 #include <rtems.h>
+#include <bsp/irq.h>
+
+// The SYSTIMER comparator the clock driver does not use.  TARGET0 is the clock
+// tick; TARGET1 and TARGET2 are free, so an interrupt can be raised here
+// without disturbing timekeeping.  Offsets from the C3 TRM, confirmed against
+// QEMU's model.
+#define ST_BASE 0x60023000U
+#define ST_REG(off) (*(volatile uint32_t *) (ST_BASE + (off)))
+#define ST_CONF 0x00U
+#define ST_TARGET1_HI 0x24U
+#define ST_TARGET1_LO 0x28U
+#define ST_TARGET1_CONF 0x38U
+#define ST_UNIT0_OP 0x04U
+#define ST_UNIT0_VALUE_LO 0x44U
+#define ST_COMP1_LOAD 0x54U
+#define ST_INT_ENA 0x64U
+#define ST_INT_CLR 0x6cU
+#define ST_TARGET1_WORK_EN (1U << 23)
+#define ST_INT_TARGET1 (1U << 1)
+#define SYSTIMER_TARGET1_IRQ 38  // from the BSP's c3/chip_definitions.h
 
 namespace rtems_primitives {
 
@@ -142,10 +163,77 @@ inline void test_mutex() {
 
 inline void test_isr_context() {
   ESP_LOGI(TAG, "isr context:");
-  // Task context is not ISR context. The negative is all that can be checked
-  // from here; proving the positive needs an actual interrupt handler, which
-  // belongs with the wake stress test rather than here.
   check(!esphome::in_isr_context(), "in_isr_context is false in task context");
+}
+
+// --- ISR-safe wake ----------------------------------------------------------
+// The reasoning behind wake_loop_isrsafe() -- that rtems_semaphore_release() is
+// callable from an ISR and RTEMS defers dispatch to the outermost interrupt
+// exit -- was never executed until this test. Nothing else in the lane raises
+// an interrupt that calls it.
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static volatile bool g_isr_ran = false;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static volatile bool g_isr_saw_isr_context = false;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static volatile uint32_t g_isr_fired_us = 0;
+
+inline void systimer_target1_isr(void *arg) {
+  (void) arg;
+  ST_REG(ST_INT_CLR) = ST_INT_TARGET1;
+  g_isr_saw_isr_context = esphome::in_isr_context();
+  g_isr_fired_us = esphome::micros();
+  g_isr_ran = true;
+  // The call under test.
+  esphome::wake_loop_isrsafe();
+}
+
+inline void test_isr_wake() {
+  ESP_LOGI(TAG, "isr wake:");
+
+  const rtems_status_code sc = rtems_interrupt_handler_install(
+      SYSTIMER_TARGET1_IRQ, "prim-t1", RTEMS_INTERRUPT_UNIQUE, systimer_target1_isr, nullptr);
+  check(sc == RTEMS_SUCCESSFUL, "installed a handler on SYSTIMER TARGET1");
+  if (sc != RTEMS_SUCCESSFUL) {
+    return;
+  }
+
+  g_isr_ran = false;
+  g_isr_saw_isr_context = false;
+
+  // One-shot, 50 ms out: read the counter, add 50 ms of 16 MHz ticks, arm.
+  ST_REG(ST_UNIT0_OP) = (1U << 30);
+  while ((ST_REG(ST_UNIT0_OP) & (1U << 29)) == 0) {
+  }
+  const uint32_t now_ticks = ST_REG(ST_UNIT0_VALUE_LO);
+  ST_REG(ST_TARGET1_CONF) = 0;  // one-shot: PERIOD_MODE clear, unit0 selected
+  ST_REG(ST_TARGET1_HI) = 0;
+  ST_REG(ST_TARGET1_LO) = now_ticks + (16000000U / 20U);
+  ST_REG(ST_COMP1_LOAD) = 1U;
+  ST_REG(ST_CONF) |= ST_TARGET1_WORK_EN;
+  ST_REG(ST_INT_ENA) |= ST_INT_TARGET1;
+
+  // Block the way Application::loop() does. If the ISR's wake works this
+  // returns early; if it does not, the timeout expires and the elapsed time
+  // gives it away.
+  const uint32_t before_us = esphome::micros();
+  esphome::internal::wakeable_delay(5000);
+  const uint32_t waited_us = esphome::micros() - before_us;
+
+  check(g_isr_ran, "the interrupt fired");
+  check(g_isr_saw_isr_context, "in_isr_context is TRUE inside the handler");
+  check(waited_us < 4000000U, "wakeable_delay returned before its 5s timeout");
+  if (g_isr_ran) {
+    ESP_LOGI(TAG, "       fired at %uus, loop resumed after %uus",
+             static_cast<unsigned>(g_isr_fired_us), static_cast<unsigned>(waited_us));
+    const uint32_t latency = esphome::micros() - g_isr_fired_us;
+    ESP_LOGI(TAG, "       isr-to-loop latency %uus", static_cast<unsigned>(latency));
+  }
+
+  ST_REG(ST_INT_ENA) &= ~ST_INT_TARGET1;
+  ST_REG(ST_CONF) &= ~ST_TARGET1_WORK_EN;
+  rtems_interrupt_handler_remove(SYSTIMER_TARGET1_IRQ, systimer_target1_isr, nullptr);
 }
 
 inline void run() {
@@ -154,6 +242,7 @@ inline void run() {
   test_time();
   test_mutex();
   test_isr_context();
+  test_isr_wake();
   if (g_failures == 0) {
     ESP_LOGI(TAG, "PRIMITIVES ok");
   } else {

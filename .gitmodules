@@ -99,11 +99,24 @@
 	# rtems_waf from the same, and lwip-upstream from git.savannah.gnu.org.
 	# Worth knowing before diagnosing a fetch that stops part way.
 	#
-	# Forked, for one commit: netstart.h has no extern "C" guard, so a C++
-	# caller gets a mangled reference to start_networking() that nothing
-	# defines.  ESPHome is C++ and calling that is the first thing it does,
-	# so this is needed before anything here links.  Branch netstart-extern-c
-	# is upstream main plus that one change; point this back at
+	# Forked, for two fixes ESPHome cannot run without.  Branch
+	# rtems-esphome-integration is upstream main plus:
+	#
+	#   netstart.h: Add the extern "C" guard
+	#       Without it a C++ caller gets a mangled reference to
+	#       start_networking() and nothing links.
+	#
+	#   rtems_lwip_io: Do not build a descriptor from a failed accept
+	#       accept() passed lwip_accept()'s -1 straight into
+	#       make_sysfd_from_lwipfd(), so a failed accept returned a valid
+	#       descriptor holding data0 = -1.  On the non-blocking listener any
+	#       event-driven server uses, every idle poll handed back a fresh
+	#       one -- a descriptor leak, and every call on it returning -1 with
+	#       no errno set.
+	#
+	# Each is also a topic branch of its own for submission --
+	# netstart-extern-c and io-accept-and-semaphore -- because they are
+	# unrelated fixes and should be reviewed apart.  Point this back at
 	#
 	#     https://gitlab.rtems.org/rtems/pkg/rtems-lwip.git
 	#
@@ -121,7 +134,7 @@
 	url = git@github.com:thesamprice/rtems-lwip.git
 	# The same over https, when there is no key on the machine:
 	#url = https://github.com/thesamprice/rtems-lwip.git
-	branch = netstart-extern-c
+	branch = rtems-esphome-integration
 	update = none
 	update = none
 

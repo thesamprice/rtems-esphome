@@ -6,10 +6,19 @@
 # flag.
 #
 # Usage:
-#   tools/rtems-ci-run.sh [options] <image.bin>
+#   tools/rtems-ci-run.sh [options] <image.bin> [-- <qemu args>...]
 #
 #   <image.bin>   the raw image the RTEMS build backend produced, which is
 #                 <build-path>/<name>.bin
+#
+#   Anything after -- is appended to the QEMU command line.  That is how a
+#   configuration that needs something on the other end of a bus gets it, for
+#   example:
+#
+#       -- -device tmp105,address=0x48
+#
+#   An I2C driver with nothing to talk to can only be tested for not crashing,
+#   which is the kind of pass this harness exists to avoid.
 #
 # Options:
 #   -q QEMU   qemu-system-riscv32   (default: $QEMU_ESP32C3 or src/esp-qemu/build/)
@@ -82,6 +91,14 @@ shift $((OPTIND - 1))
 
 IMAGE=${1:-}
 [ -n "$IMAGE" ] || { echo "error: no image given" >&2; exit 2; }
+shift || true
+
+# Anything after -- goes to QEMU untouched.
+EXTRA=()
+if [ "${1:-}" = "--" ]; then
+  shift
+  EXTRA=("$@")
+fi
 [ -f "$IMAGE" ] || { echo "error: no such image: $IMAGE" >&2; exit 2; }
 [ -x "$QEMU" ] || { echo "error: QEMU not found: $QEMU" >&2; exit 2; }
 "$QEMU" -M help 2>/dev/null | grep -q '^esp32c3 ' || {
@@ -106,6 +123,7 @@ rm -f "$log"
 "$QEMU" -M esp32c3 -display none -monitor none -no-reboot $ICOUNT_ARGS $DATA_ARGS \
   -serial file:"$log" \
   -drive file="$flash",if=mtd,format=raw \
+  "${EXTRA[@]}" \
   > "$OUT/qemu.out" 2> "$OUT/qemu.err" &
 qpid=$!
 

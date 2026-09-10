@@ -177,13 +177,13 @@ static volatile bool g_isr_ran = false;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static volatile bool g_isr_saw_isr_context = false;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static volatile uint32_t g_isr_fired_us = 0;
+static volatile uint64_t g_isr_fired_ns = 0;
 
 inline void systimer_target1_isr(void *arg) {
   (void) arg;
   ST_REG(ST_INT_CLR) = ST_INT_TARGET1;
   g_isr_saw_isr_context = esphome::in_isr_context();
-  g_isr_fired_us = esphome::micros();
+  g_isr_fired_ns = rtems_clock_get_uptime_nanoseconds();
   g_isr_ran = true;
   // The call under test.
   esphome::wake_loop_isrsafe();
@@ -217,23 +217,121 @@ inline void test_isr_wake() {
   // Block the way Application::loop() does. If the ISR's wake works this
   // returns early; if it does not, the timeout expires and the elapsed time
   // gives it away.
-  const uint32_t before_us = esphome::micros();
+  const uint64_t before_ns = rtems_clock_get_uptime_nanoseconds();
   esphome::internal::wakeable_delay(5000);
-  const uint32_t waited_us = esphome::micros() - before_us;
+  // Immediately: anything between the wait returning and this read -- a check(),
+  // a log line -- is measured as latency and is not.
+  const uint64_t resumed_ns = rtems_clock_get_uptime_nanoseconds();
 
   check(g_isr_ran, "the interrupt fired");
   check(g_isr_saw_isr_context, "in_isr_context is TRUE inside the handler");
-  check(waited_us < 4000000U, "wakeable_delay returned before its 5s timeout");
+  check(resumed_ns - before_ns < 4000000000ULL, "wakeable_delay returned before its 5s timeout");
   if (g_isr_ran) {
-    ESP_LOGI(TAG, "       fired at %uus, loop resumed after %uus",
-             static_cast<unsigned>(g_isr_fired_us), static_cast<unsigned>(waited_us));
-    const uint32_t latency = esphome::micros() - g_isr_fired_us;
-    ESP_LOGI(TAG, "       isr-to-loop latency %uus", static_cast<unsigned>(latency));
+    // Nanoseconds, not microseconds: the wake path is a semaphore release and a
+    // task dispatch, which is well under a microsecond, and integer division
+    // would report every one of them as zero.
+    ESP_LOGI(TAG, "       isr-to-loop latency %uns", static_cast<unsigned>(resumed_ns - g_isr_fired_ns));
   }
 
   ST_REG(ST_INT_ENA) &= ~ST_INT_TARGET1;
   ST_REG(ST_CONF) &= ~ST_TARGET1_WORK_EN;
   rtems_interrupt_handler_remove(SYSTIMER_TARGET1_IRQ, systimer_target1_isr, nullptr);
+}
+
+// --- wake latency under repeated signalling -------------------------------
+// One measurement under one condition says nothing about the tail, and the tail
+// is what a latency-sensitive event loop cares about. This signals from a
+// background task at randomised intervals and reports the distribution.
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static volatile uint64_t g_signal_ns = 0;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static volatile bool g_stress_stop = false;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static volatile bool g_signal_pending = false;
+
+extern "C" inline rtems_task wake_stress_helper(rtems_task_argument arg) {
+  (void) arg;
+  // xorshift rather than rand(): no allocation, no lock, and reproducible from
+  // a fixed seed, which matters for a test whose output is a distribution.
+  uint32_t state = 0x9e3779b9U;
+  while (!g_stress_stop) {
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    // 1..20 ms, so the main loop is sometimes already waiting and sometimes
+    // not. Both are worth covering: a signal arriving while the loop is awake
+    // must not be swallowed, which is why the semaphore counts.
+    rtems_task_wake_after((state % 20U) + 1U);
+    if (g_stress_stop) {
+      break;
+    }
+    g_signal_ns = rtems_clock_get_uptime_nanoseconds();
+    g_signal_pending = true;
+    esphome::wake_loop_threadsafe();
+  }
+  rtems_task_delete(RTEMS_SELF);
+}
+
+inline void test_wake_stress() {
+  ESP_LOGI(TAG, "wake latency:");
+
+  rtems_id helper = RTEMS_INVALID_ID;
+  const rtems_status_code sc =
+      rtems_task_create(rtems_build_name('W', 'A', 'K', 'E'), 100, RTEMS_MINIMUM_STACK_SIZE * 4,
+                        RTEMS_DEFAULT_MODES, RTEMS_DEFAULT_ATTRIBUTES, &helper);
+  check(sc == RTEMS_SUCCESSFUL, "stress helper task created");
+  if (sc != RTEMS_SUCCESSFUL) {
+    return;
+  }
+
+  g_stress_stop = false;
+  g_signal_pending = false;
+  rtems_task_start(helper, wake_stress_helper, 0);
+
+  static constexpr int SAMPLES = 200;
+  uint64_t min_ns = ~0ULL;
+  uint64_t max_ns = 0;
+  uint64_t total_ns = 0;
+  int counted = 0;
+  int missed = 0;
+
+  for (int i = 0; i < SAMPLES; ++i) {
+    // Wait the way Application::loop() does. The timeout is far longer than the
+    // helper's interval, so returning on it rather than on a wake is itself a
+    // failure worth counting.
+    esphome::internal::wakeable_delay(500);
+    // Read before anything else, for the same reason as above.
+    const uint64_t resumed_ns = rtems_clock_get_uptime_nanoseconds();
+    if (!g_signal_pending) {
+      ++missed;
+      continue;
+    }
+    const uint64_t latency = resumed_ns - g_signal_ns;
+    g_signal_pending = false;
+    // Discard the first few: the helper's first interval overlaps this loop
+    // starting up, so they measure setup rather than wake latency.
+    if (i < 5) {
+      continue;
+    }
+    min_ns = latency < min_ns ? latency : min_ns;
+    max_ns = latency > max_ns ? latency : max_ns;
+    total_ns += latency;
+    ++counted;
+  }
+
+  g_stress_stop = true;
+  esphome::delay(100);
+
+  check(counted > 100, "most waits were ended by a wake, not by the timeout");
+  if (counted > 0) {
+    const uint64_t mean = total_ns / counted;
+    ESP_LOGI(TAG, "       %d samples: min %uns  mean %uns  max %uns (%d timed out)", counted,
+             static_cast<unsigned>(min_ns), static_cast<unsigned>(mean), static_cast<unsigned>(max_ns), missed);
+    // A wake that takes longer than a clock tick has lost its point: the loop
+    // would have run on the tick anyway. 10ms is the default tick period here.
+    check(max_ns < 10000000ULL, "worst-case wake latency is under one clock tick");
+  }
 }
 
 inline void run() {
@@ -243,6 +341,7 @@ inline void run() {
   test_mutex();
   test_isr_context();
   test_isr_wake();
+  test_wake_stress();
   if (g_failures == 0) {
     ESP_LOGI(TAG, "PRIMITIVES ok");
   } else {

@@ -1,0 +1,43 @@
+name: Toolchain image
+
+# Deliberately NOT on every push.  Building the RTEMS toolchain from the RSB is
+# tens of minutes and has no business in the pipeline; this runs only when one
+# of the inputs baked into the image actually changes, or by hand.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.gitmodules'
+      - 'patches/**'
+      - 'config_esp32c3db.ini'
+      - '.github/Dockerfile.toolchain'
+      - 'scripts/build_esp_qemu.sh'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: 'git config --global url."https://github.com/".insteadOf git@github.com:'
+      # --checkout because every submodule is "update = none" and a plain
+      # --init skips them silently.
+      - name: Fetch the inputs that get baked in
+        run: git submodule update --init --checkout --depth=1 src/rsb src/rtems src/esp-qemu
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .github/Dockerfile.toolchain
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/rtems-esphome-toolchain:latest
+            ghcr.io/${{ github.repository_owner }}/rtems-esphome-toolchain:${{ github.sha }}

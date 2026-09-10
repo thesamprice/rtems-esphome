@@ -1,0 +1,62 @@
+# The RTEMS toolchain, the esp32c3db BSP and the patched QEMU, baked once.
+#
+# Building the RTEMS Source Builder takes tens of minutes and must not happen in
+# the pipeline.  It happens here instead: rarely, deliberately, and published as
+# an image both lanes pull in seconds.
+#
+# Rebuild when the RSB pin, the RTEMS pin, the QEMU pin or patches/ changes --
+# those are exactly the inputs baked in, and .github/workflows/toolchain-image.yml
+# watches them.
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential git python3 python3-dev python3-venv python-is-python3 \
+        texinfo unzip pax bison flex ninja-build pkg-config \
+        libncurses-dev zlib1g-dev libglib2.0-dev libgcrypt20-dev libslirp-dev \
+        ca-certificates curl xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+# The build context is a checkout of this repository with src/rsb, src/rtems and
+# src/esp-qemu fetched at their pins.  Copying rather than cloning keeps the
+# image attributable to exactly the pins the repository records.
+COPY . /src
+
+ENV RTEMS_TOOLS_PREFIX=/opt/rtems/7
+ENV PATH=/opt/rtems/7/bin:$PATH
+
+# Local patches first: they are what make the BSP's clock correct and its
+# headers installable.  Building before applying them would bake in the bugs.
+RUN scripts/apply_patches.sh
+
+RUN cd src/rsb/rtems \
+    && ../source-builder/sb-set-builder --prefix=/opt/rtems/7 7/rtems-riscv \
+    && rm -rf /src/src/rsb/rtems/build /root/.cache
+
+# Install, not just build.  The .pc file the ESPHome build backend reads is
+# produced by install; a built-but-not-installed BSP fails with "no pkg-config
+# file", which is the least obvious symptom in this whole chain.
+RUN cd src/rtems \
+    && ./waf configure -o build-esp32c3db \
+         --rtems-config=/src/config_esp32c3db.ini \
+         --rtems-tools=/opt/rtems/7 --prefix=/opt/rtems/7 \
+    && ./waf build -j "$(nproc)" \
+    && ./waf install \
+    && rm -rf /src/src/rtems/build-esp32c3db
+
+RUN scripts/build_esp_qemu.sh -j "$(nproc)" \
+    && mkdir -p /opt/qemu/bin /opt/qemu/share \
+    && cp src/esp-qemu/build/qemu-system-riscv32 /opt/qemu/bin/ \
+    && cp src/esp-qemu/pc-bios/*.bin /opt/qemu/share/ \
+    && rm -rf /src/src/esp-qemu
+
+# QEMU cannot find its ROM images from outside its build tree, so consumers must
+# pass -L.  Both harnesses take QEMU_DATA_DIR for that.
+ENV QEMU_ESP32C3=/opt/qemu/bin/qemu-system-riscv32
+ENV QEMU_DATA_DIR=/opt/qemu/share
+
+# Leave no source behind: the image is a toolchain, and a stale copy of the
+# repository inside it would be mistaken for the one under test.
+RUN rm -rf /src
+WORKDIR /work

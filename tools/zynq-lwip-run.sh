@@ -1,0 +1,109 @@
+#!/bin/bash
+# Bring lwip up on arm/xilinx_zynq_a9_qemu and prove a packet crossed the
+# boundary, by connecting to the guest from the host.
+#
+# Usage:
+#   tools/zynq-lwip-run.sh [options] <image.elf>
+#
+# Options:
+#   -q QEMU   qemu-system-arm      (default: $QEMU_ARM or qemu-system-arm)
+#   -o DIR    output dir           (default: ./zynq-lwip-results.<timestamp>)
+#   -t SECS   hard timeout         (default: 90)
+#   -p PORT   host port to forward (default: 5555)
+#
+# Why this is not rtems-ci-run.sh
+#   That harness boots a raw flash image with "-drive if=mtd", which is the
+#   ESP32-C3's direct boot mode.  The Zynq takes an ELF through -kernel.  The
+#   two are different enough at the QEMU command line that one script with a
+#   flag would be mostly flag.
+#
+# Why the host connects rather than the guest pinging out
+#   A guest that can send but not receive would pass a ping test against the
+#   emulator's own gateway, because QEMU's user-mode networking answers ICMP
+#   itself without a packet ever reaching the outside.  An accepted TCP
+#   connection carrying bytes in both directions cannot be faked that way: it
+#   needs the GEM, the driver, lwip and the host stack all working.
+#
+# The address is QEMU's user-mode default, 10.0.2.15 behind a NAT at 10.0.2.2,
+# set statically in the guest.  DHCP would work and would be testing QEMU's
+# DHCP server rather than anything here.
+
+set -u
+
+QEMU=${QEMU_ARM:-qemu-system-arm}
+OUT=""
+TMO=90
+PORT=5555
+
+while getopts "q:o:t:p:" opt; do
+  case $opt in
+    q) QEMU=$OPTARG;;
+    o) OUT=$OPTARG;;
+    t) TMO=$OPTARG;;
+    p) PORT=$OPTARG;;
+    *) exit 2;;
+  esac
+done
+shift $((OPTIND - 1))
+
+IMAGE=${1:-}
+[ -n "$IMAGE" ] || { echo "error: no image given" >&2; exit 2; }
+[ -f "$IMAGE" ] || { echo "error: no such image: $IMAGE" >&2; exit 2; }
+command -v "$QEMU" >/dev/null || { echo "error: $QEMU not found" >&2; exit 2; }
+
+[ -n "$OUT" ] || OUT=zynq-lwip-results.$(date +%Y%m%d-%H%M%S)
+mkdir -p "$OUT"
+OUT=$(cd "$OUT" && pwd)
+log="$OUT/serial.log"
+rm -f "$log"
+
+# The machine already has two Cadence GEMs, so the netdev attaches to the first
+# rather than being plugged in: "-device cadence_gem" is refused as not
+# pluggable.  The second GEM having no peer is expected and QEMU says so.
+"$QEMU" -no-reboot -display none -monitor none -M xilinx-zynq-a9 -m 256M \
+  -serial null -serial file:"$log" \
+  -net nic -net user,hostfwd=tcp:127.0.0.1:"$PORT"-10.0.2.15:"$PORT" \
+  -kernel "$IMAGE" > "$OUT/qemu.out" 2> "$OUT/qemu.err" &
+qpid=$!
+
+verdict=TIMEOUT
+for _ in $(seq 1 $((TMO * 2))); do
+  grep -q "listening on" "$log" 2>/dev/null && break
+  kill -0 $qpid 2>/dev/null || break
+  sleep 0.5
+done
+
+if grep -q "listening on" "$log" 2>/dev/null; then
+  python3 - "$PORT" <<'PY' > "$OUT/host.log" 2>&1
+import socket, sys
+port = int(sys.argv[1])
+s = socket.create_connection(("127.0.0.1", port), timeout=15)
+s.sendall(b"hello")
+print("guest replied:", s.recv(32))
+s.close()
+PY
+fi
+
+for _ in $(seq 1 40); do
+  grep -q "END OF ZYNQ LWIP TEST" "$log" 2>/dev/null && break
+  sleep 0.5
+done
+kill -9 $qpid 2>/dev/null
+wait $qpid 2>/dev/null
+
+if grep -q "CI-MARKER net ok" "$log" 2>/dev/null; then
+  verdict=PASS
+elif grep -q "failure(s)" "$log" 2>/dev/null; then
+  verdict=FAIL
+fi
+
+{
+  echo "verdict: $verdict"
+  grep -E "^(start_networking|the interface|it has|socket|bind|listen|a connection|bytes|they are|a reply)" "$log" 2>/dev/null
+  echo "host side:"; sed 's/^/  /' "$OUT/host.log" 2>/dev/null
+} | tee "$OUT/result.txt"
+
+echo
+echo "serial log: $log"
+[ "$verdict" = PASS ] && exit 0
+exit 1

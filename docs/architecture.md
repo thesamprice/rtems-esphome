@@ -143,6 +143,37 @@ networking half of the recommendation is unchanged and is stronger now than
 when it was written, because the OpenCores driver gap is a measured absence
 rather than an assumption.
 
+## The network stack is lwip, not libbsd
+
+Settled in #50 by building both candidates rather than reading about them.
+
+| | rtems-lwip | rtems-libbsd |
+|---|---|---|
+| size | 391 files, 148,418 lines | 5,602 files, 2,628,479 lines |
+| `arm/xilinx_zynq_a9_qemu` | a named target it ships | works, via the Zynq nexus |
+| sockets are file descriptors | yes, `rtems_lwip_io.c` | yes |
+| mDNS | headers only — see #63 | mDNSResponder |
+
+The decisive number is the first one. Eighteen times is not a preference, it is
+the difference between a stack that can eventually run on the part this project
+is aimed at and one that cannot: the ESP32-C3 has 320 KiB of RAM, and libbsd is
+not a candidate there under any configuration, `minimal.ini` included. Choosing
+libbsd for M3 would have meant choosing to throw it away later.
+
+Confirmed rather than assumed: lwip configures and builds unpatched against
+this project's RTEMS pin and toolchain, and its `networking01` test passes under
+`qemu-system-arm -M xilinx-zynq-a9`.
+
+`liblwip.a` exports the unprefixed BSD names — `socket`, `bind`, `connect`,
+`accept`, `send`, `recv`, `getaddrinfo`, `select` — and deliberately not
+`close`, `read` or `write`, because a socket is a real RTEMS file descriptor
+and the standard ones already work on it. That is what lets ESPHome's existing
+socket backend be *selected* rather than written (#12).
+
+**Neither stack helps the ESP32-C3 lane.** Neither has an OpenCores Ethernet
+driver, which is the only NIC QEMU gives that machine. #30's conclusion stands
+and #33 is still what decides networking on that part.
+
 ## Where the port code lives
 
 Both forked, both for the same reason: the work ends up as commits shaped for a

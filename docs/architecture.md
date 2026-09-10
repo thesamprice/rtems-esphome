@@ -153,9 +153,21 @@ pull request rather than as patch files that have to be turned into one later.
 | `src/esphome` | `thesamprice/esphome` | `rtems` |
 | `src/esp-qemu` | `thesamprice/qemu` | `esp32c3-rtems-fixes` |
 
-`patches/` stays for what it is good at: a handful of small changes against a
-tree we do not intend to carry a branch of. Today that is two RTEMS patches —
-one real BSP fix and one backport of an upstream commit our pin predates.
+`patches/` stays for what it is good at: changes against a tree we do not
+intend to carry a branch of. Today that is four RTEMS patches, in
+`rtems_builder/patches/rtems/`: the systimer frequency, the chip header's
+install path, a backport of an upstream commit our pin predates, and the
+ESP32-C3 GPIO driver.
+
+The GPIO driver stretches the rule and it is worth saying so. It is 300 lines
+and a new file, not a one-line fix, which is the shape that usually argues for
+a branch. It stays a patch because it is *finished* — a BSP driver against a
+stable API, headed upstream to RTEMS as one commit (#57) — rather than a body
+of work that will keep changing under us. The test for whether something
+belongs in `patches/` is not its size; it is whether it needs rebasing by hand
+against a tree that moves. If the RTEMS pin starts moving often, or a second
+BSP driver follows this one, that answer changes and RTEMS gets a fork like the
+other two.
 
 A platform backend is not that. It adds a platform component, a
 `core/wake/wake_rtems.*`, a Python build target, a HAL header and `USE_RTEMS`

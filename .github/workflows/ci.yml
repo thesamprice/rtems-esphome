@@ -74,10 +74,16 @@ jobs:
       - name: Build QEMU
         if: steps.cache.outputs.cache-hit != 'true'
         run: scripts/build_esp_qemu.sh -j "$(nproc)"
+      # pc-bios travels with the binary. QEMU locates it relative to its own
+      # build tree, so a binary lifted out on its own dies immediately with
+      # "ROM code binary not found" -- which is a one-second TIMEOUT in the
+      # harness and looks nothing like a missing data file.
       - uses: actions/upload-artifact@v4
         with:
           name: qemu-system-riscv32
-          path: src/esp-qemu/build/qemu-system-riscv32
+          path: |
+            src/esp-qemu/build/qemu-system-riscv32
+            src/esp-qemu/pc-bios/*.bin
           retention-days: 1
 
   # The A side of the A/B: the backend that already works, so a common-code
@@ -96,7 +102,7 @@ jobs:
         with:
           name: qemu-system-riscv32
           path: qemu-bin
-      - run: chmod +x qemu-bin/qemu-system-riscv32
+      - run: chmod +x qemu-bin/src/esp-qemu/build/qemu-system-riscv32
       # ESPHome brings its own ESP-IDF and RISC-V toolchain on first compile.
       # Several minutes, and worth caching on the esphome pin.
       - uses: actions/cache@v4
@@ -113,7 +119,8 @@ jobs:
         run: ../../.venv/bin/esphome compile reference-node.yaml
       - name: Run
         env:
-          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/qemu-system-riscv32
+          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/src/esp-qemu/build/qemu-system-riscv32
+          QEMU_DATA_DIR: ${{ github.workspace }}/qemu-bin/src/esp-qemu/pc-bios
         run: |
           tools/esp-idf-ci-run.sh -o esp-idf-results \
             tests/esp-idf-ci/.esphome/build/reference-node/build
@@ -140,7 +147,7 @@ jobs:
         with:
           name: qemu-system-riscv32
           path: qemu-bin
-      - run: chmod +x qemu-bin/qemu-system-riscv32
+      - run: chmod +x qemu-bin/src/esp-qemu/build/qemu-system-riscv32
       - name: Restore cached RTEMS toolchain and BSP
         id: rtems-cache
         uses: actions/cache@v4
@@ -177,7 +184,8 @@ jobs:
           ../../.venv/bin/esphome compile scheduler.yaml
       - name: Run the reference node
         env:
-          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/qemu-system-riscv32
+          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/src/esp-qemu/build/qemu-system-riscv32
+          QEMU_DATA_DIR: ${{ github.workspace }}/qemu-bin/src/esp-qemu/pc-bios
         run: |
           tools/rtems-ci-run.sh -o rtems-results/reference \
             tests/rtems-ci/.esphome/build/reference-node/reference-node.bin
@@ -186,19 +194,22 @@ jobs:
       # with icount off. See #46.
       - name: Run the primitives, icount on
         env:
-          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/qemu-system-riscv32
+          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/src/esp-qemu/build/qemu-system-riscv32
+          QEMU_DATA_DIR: ${{ github.workspace }}/qemu-bin/src/esp-qemu/pc-bios
         run: |
           tools/rtems-ci-run.sh -o rtems-results/primitives-icount -t 240 \
             -M "PRIMITIVES ok" tests/rtems-ci/.esphome/build/primitives/primitives.bin
       - name: Run the primitives, icount off
         env:
-          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/qemu-system-riscv32
+          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/src/esp-qemu/build/qemu-system-riscv32
+          QEMU_DATA_DIR: ${{ github.workspace }}/qemu-bin/src/esp-qemu/pc-bios
         run: |
           tools/rtems-ci-run.sh -o rtems-results/primitives-realtime -t 240 -I \
             -M "PRIMITIVES ok" tests/rtems-ci/.esphome/build/primitives/primitives.bin
       - name: Run the scheduler validation, both ways
         env:
-          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/qemu-system-riscv32
+          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/src/esp-qemu/build/qemu-system-riscv32
+          QEMU_DATA_DIR: ${{ github.workspace }}/qemu-bin/src/esp-qemu/pc-bios
         run: |
           tools/rtems-ci-run.sh -o rtems-results/scheduler-icount -t 240 \
             -M "SCHEDULER ok" tests/rtems-ci/.esphome/build/scheduler/scheduler.bin

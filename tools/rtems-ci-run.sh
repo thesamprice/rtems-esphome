@@ -20,6 +20,12 @@
 #             config that does not print them, such as a self-test
 #   -I        disable instruction counting
 #
+# $QEMU_DATA_DIR, if set, is passed as -L.  QEMU finds pc-bios relative to its
+# own build tree, so a binary copied somewhere else -- a CI artifact, an
+# install -- cannot find the ESP32-C3 ROM and dies immediately with
+# "ROM code binary not found".  Point this at the pc-bios directory in that
+# case.
+#
 # Exit status is 0 only if every required marker was seen and no failure
 # signature was.
 #
@@ -47,6 +53,8 @@ QEMU=${QEMU_ESP32C3:-$TOP/src/esp-qemu/build/qemu-system-riscv32}
 OUT=""
 TMO=90
 FLASH_SIZE=${ESP_CI_FLASH_SIZE:-$((4 * 1024 * 1024))}
+DATA_ARGS=""
+[ -n "${QEMU_DATA_DIR:-}" ] && DATA_ARGS="-L ${QEMU_DATA_DIR}"
 ICOUNT_ARGS="-icount shift=0,sleep=off"
 
 MARKERS=("CI-MARKER boot ok" "CI-MARKER scheduler ok")
@@ -95,7 +103,7 @@ printf 'image: %s (%s bytes)\n' "$IMAGE" "$(wc -c < "$IMAGE" | tr -d ' ')"
 
 rm -f "$log"
 # shellcheck disable=SC2086
-"$QEMU" -M esp32c3 -display none -monitor none -no-reboot $ICOUNT_ARGS \
+"$QEMU" -M esp32c3 -display none -monitor none -no-reboot $ICOUNT_ARGS $DATA_ARGS \
   -serial file:"$log" \
   -drive file="$flash",if=mtd,format=raw \
   > "$OUT/qemu.out" 2> "$OUT/qemu.err" &

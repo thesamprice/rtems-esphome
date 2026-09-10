@@ -1,0 +1,34 @@
+# Reads a real I2C device through ESPHome's own I2C stack.
+#
+# The bus is /dev/i2c-0, which the RTEMS platform registers on the BSP's
+# controller.  There is no sda:/scl: here because which pads the controller
+# reaches is fixed when the BSP is built -- the same choice still has to be
+# made, one layer down.
+#
+# QEMU supplies the slave:
+#
+#     -device tmp105,address=0x48
+#
+# The tmp105 is a real device model, not a stub, so a value read from it came
+# off a modelled bus rather than out of the driver.
+
+esphome:
+  name: i2ctest
+  includes:
+    - i2c_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_i2c_test::run(id(bus));"
+
+rtems:
+  bsp: riscv/esp32c3db
+
+logger:
+  level: DEBUG
+
+i2c:
+  id: bus
+  device: /dev/i2c-0
+  frequency: 100kHz
+  scan: true

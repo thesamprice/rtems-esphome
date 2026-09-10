@@ -95,6 +95,10 @@
 	#
 	#     git submodule update --init --checkout --depth=1 --recursive src/rtems-lwip
 	#
+	# That reaches three hosts, not one: this repo from gitlab.rtems.org,
+	# rtems_waf from the same, and lwip-upstream from git.savannah.gnu.org.
+	# Worth knowing before diagnosing a fetch that stops part way.
+	#
 	# The comparison in #50 was made against RTEMS/rtems-lwip on GitHub,
 	# because gitlab.rtems.org was refusing connections at the time.  Same
 	# tree -- both were at 1a7ccc63 when checked -- and this points at the

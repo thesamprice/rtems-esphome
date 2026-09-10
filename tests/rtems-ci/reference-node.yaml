@@ -1,0 +1,58 @@
+# The B side of the A/B.
+#
+# Deliberately the same configuration as tests/esp-idf-ci/reference-node.yaml,
+# on the same part, differing only in the runtime underneath.  That is the whole
+# point of the pairing: a difference between the two lanes is a difference
+# between RTEMS and ESP-IDF, not between two configurations that happen to look
+# similar.
+#
+# Keep them in step.  A change to one that is not made to the other quietly
+# turns the comparison into a comparison of something else.
+
+esphome:
+  name: reference-node
+  on_boot:
+    priority: -100
+    then:
+      # logger.log defaults to DEBUG and the logger below is at INFO, so a
+      # marker left at the default would never print and the harness would time
+      # out on firmware that was working.  The ESP-IDF lane has the same trap.
+      - logger.log:
+          level: INFO
+          format: "CI-MARKER boot ok"
+
+rtems:
+  bsp: riscv/esp32c3db
+
+logger:
+  level: INFO
+  # No hardware_uart here, unlike the ESP-IDF config.  On RTEMS the console is
+  # the BSP's -- which device and what baud are fixed when the BSP is built --
+  # so there is nothing for ESPHome to select.  The BSP config in
+  # config_esp32c3db.ini is where that choice lives, and it has to be UART0
+  # rather than USB Serial/JTAG for the same reason the ESP-IDF lane does.
+
+sensor:
+  - platform: template
+    name: "Counter"
+    id: ci_counter
+    update_interval: 1s
+    lambda: |-
+      static float counter = 0;
+      return ++counter;
+    on_value:
+      # Third update: the scheduler has run a periodic component three times,
+      # which is the cheapest evidence that time is advancing and the main loop
+      # is alive rather than merely having reached setup().
+      - if:
+          condition:
+            lambda: 'return id(ci_counter).state >= 3;'
+          then:
+            - logger.log:
+                level: INFO
+                format: "CI-MARKER scheduler ok"
+
+binary_sensor:
+  - platform: template
+    name: "Alive"
+    lambda: "return true;"

@@ -89,16 +89,21 @@
 	# descriptors, so select() spans sockets and files and ESPHome's existing
 	# socket backend needs no new implementation.
 	#
-	# Fetched from the GitHub mirror rather than gitlab.rtems.org.  Not a
-	# preference: gitlab has been refusing connections on port 2222 for the
-	# whole of this work, and treating that as a blocker cost #50 several
-	# sessions of being deferred for no reason.  The mirror is current --
-	# it was last pushed the same week.
+	# It has submodules of its own -- lwip-upstream and rtems_waf -- which
+	# ./waf configure needs, so fetching this one wants --recursive.  Shallow
+	# is still fine:
 	#
-	# It has submodules of its own, lwip-upstream and rtems_waf, which
-	# ./waf configure needs, so this one is not useful shallow.
-	url = https://github.com/RTEMS/rtems-lwip.git
+	#     git submodule update --init --checkout --depth=1 --recursive src/rtems-lwip
+	#
+	# The comparison in #50 was made against RTEMS/rtems-lwip on GitHub,
+	# because gitlab.rtems.org was refusing connections at the time.  Same
+	# tree -- both were at 1a7ccc63 when checked -- and this points at the
+	# canonical one now that it answers again.  The lesson kept from that is
+	# that the mirror exists and is current, so an outage here is a detour and
+	# not a blocker; treating it as one cost #50 several sessions.
+	url = https://gitlab.rtems.org/rtems/pkg/rtems-lwip.git
 	branch = main
+	update = none
 	update = none
 
 [submodule "src/rtems-libbsd"]

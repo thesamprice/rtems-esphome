@@ -93,3 +93,20 @@
 	url = https://gitlab.rtems.org/rtems/pkg/rtems-libbsd.git
 	branch = 7-freebsd-14
 	update = none
+
+[submodule "src/rsb"]
+	path = src/rsb
+	# The RTEMS Source Builder, which is what produces the cross toolchain the
+	# RTEMS lane needs.  Declared because CI has to build one from nothing: a
+	# developer usually has $HOME/rtems/7 already, a runner never does.
+	#
+	# Building a toolchain takes tens of minutes, so CI caches the result on
+	# this pin; the pin is therefore what a cached toolchain is attributable to.
+	#
+	# Pinned at 105f43d299cb5c367fc5f2b0147f401721ed3d9c, which is the revision that
+	# built the riscv-rtems7 toolchain this port has been developed and tested
+	# against -- not whatever main happens to be, so the toolchain in CI is the
+	# one the results came from.
+	url = https://gitlab.rtems.org/rtems/tools/rtems-source-builder.git
+	branch = main
+	update = none

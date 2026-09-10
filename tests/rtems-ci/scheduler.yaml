@@ -1,0 +1,30 @@
+# Validates ESPHome's scheduler on RTEMS: set_interval and set_timeout bounds,
+# and drift across many periods rather than a count over one window.
+#
+# Nothing here is ported -- the scheduler builds on millis_64() and needed no
+# RTEMS work at all, which the audit predicted (scheduler.cpp's core-blocker
+# hits are all ESP_LOGx).  This exists to check that prediction held.
+#
+# Run it BOTH ways.  Under -icount execution is deterministic and a
+# phase-dependent timing bug can be reproducibly invisible; that is how
+# delay() hid a 7ms error.  See the harness's -I flag.
+
+esphome:
+  name: scheduler
+  includes:
+    - scheduler_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_sched::start();"
+
+rtems:
+  bsp: riscv/esp32c3db
+
+logger:
+  level: INFO
+
+interval:
+  - interval: 100ms
+    then:
+      - lambda: "rtems_sched::on_interval();"

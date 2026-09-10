@@ -12,6 +12,10 @@
 #   -p PORT   host port to forward (default: 5555)
 #   -M TEXT   the marker that means success (default: "CI-MARKER net ok")
 #   -n        do not connect from the host: for a test that does not listen
+#   -c SCRIPT run this host-side script instead of the built-in exchange.  It
+#             is given the forwarded port as its only argument and its exit
+#             status decides the verdict, which is how a lane that speaks a
+#             real protocol -- the native API, say -- reports.
 #
 # Why this is not rtems-ci-run.sh
 #   That harness boots a raw flash image with "-drive if=mtd", which is the
@@ -38,8 +42,9 @@ TMO=90
 PORT=5555
 MARKER="CI-MARKER net ok"
 CONNECT=1
+CLIENT=""
 
-while getopts "q:o:t:p:M:n" opt; do
+while getopts "q:o:t:p:M:nc:" opt; do
   case $opt in
     q) QEMU=$OPTARG;;
     o) OUT=$OPTARG;;
@@ -47,6 +52,7 @@ while getopts "q:o:t:p:M:n" opt; do
     p) PORT=$OPTARG;;
     M) MARKER=$OPTARG;;
     n) CONNECT=0;;
+    c) CLIENT=$OPTARG;;
     *) exit 2;;
   esac
 done
@@ -81,7 +87,19 @@ if [ "$CONNECT" = 1 ]; then
   done
 fi
 
-if [ "$CONNECT" = 1 ] && grep -q "listening on" "$log" 2>/dev/null; then
+client_rc=0
+if [ -n "$CLIENT" ]; then
+  # A lane with its own client waits for the application to be up rather than
+  # for a "listening on" line, because a real server prints its own banner.
+  for _ in $(seq 1 $((TMO * 2))); do
+    grep -qE "setup\(\) finished|listening on" "$log" 2>/dev/null && break
+    kill -0 $qpid 2>/dev/null || break
+    sleep 0.5
+  done
+  sleep 1
+  $CLIENT "$PORT" > "$OUT/host.log" 2>&1
+  client_rc=$?
+elif [ "$CONNECT" = 1 ] && grep -q "listening on" "$log" 2>/dev/null; then
   python3 - "$PORT" <<'PY' > "$OUT/host.log" 2>&1
 import socket, sys
 port = int(sys.argv[1])
@@ -101,7 +119,11 @@ done
 kill -9 $qpid 2>/dev/null
 wait $qpid 2>/dev/null
 
-if grep -qF "$MARKER" "$log" 2>/dev/null; then
+if [ -n "$CLIENT" ]; then
+  # The client's exit status is the verdict: the guest's own log cannot say
+  # whether a protocol exchange it is only one end of actually worked.
+  if [ "$client_rc" = 0 ]; then verdict=PASS; else verdict=FAIL; fi
+elif grep -qF "$MARKER" "$log" 2>/dev/null; then
   verdict=PASS
 elif grep -q "failure(s)" "$log" 2>/dev/null; then
   verdict=FAIL

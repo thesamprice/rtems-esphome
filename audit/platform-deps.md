@@ -14,7 +14,7 @@ with before an RTEMS image runs at all.
 |---|---:|---|
 | core-blocker | 123 | **must be addressed to boot** — core, not behind a seam |
 | seam | 4 | dispatch or interface declaration, not implementation |
-| platform-backend | 283 | a platform doing its job; an RTEMS port adds a sibling |
+| platform-backend | 284 | a platform doing its job; an RTEMS port adds a sibling |
 | component-local | 9559 | decides which components an RTEMS build can offer |
 | python | 89 | build-time validation and code generation |
 
@@ -51,7 +51,7 @@ fast path with an obvious replacement — but it is not optional.
 |---|---:|---:|---:|---:|---:|
 | freertos | 44 | 0 | 25 | 301 | 2 |
 | lwip | 4 | 2 | 1 | 149 | 8 |
-| esp-idf | 70 | 0 | 235 | 8819 | 64 |
+| esp-idf | 70 | 0 | 236 | 8819 | 64 |
 | arduino | 5 | 2 | 22 | 290 | 15 |
 
 ## Components with the most platform coupling

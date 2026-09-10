@@ -1,6 +1,6 @@
 {
   "tree": "src/esphome",
-  "revision": "58ca3456845ca130ac106796225e8ea4cb9c5107",
+  "revision": "0128c72db48962da8fe971fce799d5f7648cb728",
   "rules": [
     {
       "family": "freertos",
@@ -181,7 +181,7 @@
   "totals": {
     "component-local": 9559,
     "core-blocker": 123,
-    "platform-backend": 283,
+    "platform-backend": 284,
     "python": 89,
     "seam": 4
   },
@@ -36612,7 +36612,7 @@
     },
     {
       "file": "esphome/components/logger/logger.cpp",
-      "line": 32,
+      "line": 36,
       "family": "freertos",
       "rule": "handle-type",
       "bucket": "component-local",
@@ -36620,7 +36620,7 @@
     },
     {
       "file": "esphome/components/logger/logger.cpp",
-      "line": 244,
+      "line": 259,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -36628,7 +36628,7 @@
     },
     {
       "file": "esphome/components/logger/logger.cpp",
-      "line": 251,
+      "line": 266,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -36636,7 +36636,7 @@
     },
     {
       "file": "esphome/components/logger/logger.cpp",
-      "line": 254,
+      "line": 269,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -36644,7 +36644,7 @@
     },
     {
       "file": "esphome/components/logger/logger.cpp",
-      "line": 262,
+      "line": 277,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -36692,7 +36692,7 @@
     },
     {
       "file": "esphome/components/logger/logger.h",
-      "line": 380,
+      "line": 387,
       "family": "freertos",
       "rule": "handle-type",
       "bucket": "component-local",
@@ -57649,6 +57649,14 @@
       "rule": "include",
       "bucket": "component-local",
       "text": "#include \"esp_lcd_panel_rgb.h\""
+    },
+    {
+      "file": "esphome/components/rtems/hal.h",
+      "line": 13,
+      "family": "esp-idf",
+      "rule": "iram-attr",
+      "bucket": "platform-backend",
+      "text": "#define IRAM_ATTR"
     },
     {
       "file": "esphome/components/rtttl/rtttl.cpp",
@@ -79572,7 +79580,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 60,
+      "line": 71,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79580,7 +79588,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 61,
+      "line": 72,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79588,7 +79596,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 117,
+      "line": 128,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79596,7 +79604,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 151,
+      "line": 162,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79604,7 +79612,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 153,
+      "line": 164,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79612,7 +79620,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 158,
+      "line": 169,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79620,7 +79628,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 168,
+      "line": 179,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79628,7 +79636,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 171,
+      "line": 182,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79636,7 +79644,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 188,
+      "line": 199,
       "family": "esp-idf",
       "rule": "err-type",
       "bucket": "core-blocker",
@@ -79644,7 +79652,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 190,
+      "line": 201,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79652,7 +79660,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 193,
+      "line": 204,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79660,7 +79668,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 198,
+      "line": 209,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79668,7 +79676,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 264,
+      "line": 275,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79676,7 +79684,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 271,
+      "line": 282,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",
@@ -79684,7 +79692,7 @@
     },
     {
       "file": "esphome/core/application.cpp",
-      "line": 380,
+      "line": 391,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "core-blocker",

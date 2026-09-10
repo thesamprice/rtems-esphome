@@ -1,0 +1,200 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# The submodules use ssh URLs, which a runner has no key for. Rewriting to
+# https is done per job rather than in .gitmodules, because the ssh form is the
+# right default for a human with a key and the rewrite is a property of the
+# environment rather than of the project.
+env:
+  GIT_HTTPS_REWRITE: 1
+
+jobs:
+  # Cheap, needs no toolchain and no emulator, so it fails fast when the
+  # dependency surface moves or a submodule has drifted off its pin.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rewrite submodule URLs for a keyless runner
+        run: 'git config --global url."https://github.com/".insteadOf git@github.com:' 
+      - name: Fetch esphome
+        run: git submodule update --init --depth=1 src/esphome
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Manifest matches what is recorded
+        run: scripts/manifest.sh
+      - name: Dependency surface has not moved
+        run: scripts/audit_platform_deps.py --check
+
+  # Shared by both lanes, which is why it is its own job: building it twice
+  # would double the cost of every run for no benefit. Cached on the submodule
+  # pin, which identifies the binary exactly because the ESP32-C3 fixes are
+  # commits rather than patches.
+  qemu:
+    runs-on: ubuntu-latest
+    outputs:
+      pin: ${{ steps.pin.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: 'git config --global url."https://github.com/".insteadOf git@github.com:' 
+      - id: pin
+        run: echo "sha=$(git ls-files -s src/esp-qemu | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Restore cached QEMU
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: src/esp-qemu/build/qemu-system-riscv32
+          key: qemu-riscv32-${{ runner.os }}-${{ steps.pin.outputs.sha }}
+      - name: Build dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          # libgcrypt is not optional: the esp32c3 machine always instantiates
+          # its AES/RSA/DS devices and meson only compiles those when gcrypt is
+          # found. See scripts/build_esp_qemu.sh.
+          sudo apt-get install -y ninja-build pkg-config libglib2.0-dev \
+                                  libgcrypt20-dev python3-venv flex bison
+      - name: Build QEMU
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: scripts/build_esp_qemu.sh -j "$(nproc)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qemu-system-riscv32
+          path: src/esp-qemu/build/qemu-system-riscv32
+          retention-days: 1
+
+  # The A side of the A/B: the backend that already works, so a common-code
+  # change that breaks it is caught. CONTRIBUTING.md rule 7.
+  esp-idf-lane:
+    runs-on: ubuntu-latest
+    needs: qemu
+    steps:
+      - uses: actions/checkout@v4
+      - run: 'git config --global url."https://github.com/".insteadOf git@github.com:' 
+      - run: git submodule update --init --depth=1 src/esphome
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: qemu-system-riscv32
+          path: qemu-bin
+      - run: chmod +x qemu-bin/qemu-system-riscv32
+      # ESPHome brings its own ESP-IDF and RISC-V toolchain on first compile.
+      # Several minutes, and worth caching on the esphome pin.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/esphome
+          key: esphome-idf-${{ hashFiles('.gitmodules') }}-${{ hashFiles('tests/esp-idf-ci/reference-node.yaml') }}
+          restore-keys: esphome-idf-
+      - name: Install ESPHome from the pinned source
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -e src/esphome
+      - name: Compile
+        working-directory: tests/esp-idf-ci
+        run: ../../.venv/bin/esphome compile reference-node.yaml
+      - name: Run
+        env:
+          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/qemu-system-riscv32
+        run: |
+          tools/esp-idf-ci-run.sh -o esp-idf-results \
+            tests/esp-idf-ci/.esphome/build/reference-node/build
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: esp-idf-lane-results
+          path: esp-idf-results
+
+  # The B side. Needs an RTEMS toolchain, which the RSB builds in tens of
+  # minutes, so it is cached on the RSB revision. The first run on a cold cache
+  # is long; later ones are not.
+  rtems-lane:
+    runs-on: ubuntu-latest
+    needs: qemu
+    steps:
+      - uses: actions/checkout@v4
+      - run: 'git config --global url."https://github.com/".insteadOf git@github.com:' 
+      - run: git submodule update --init --depth=1 src/esphome
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: qemu-system-riscv32
+          path: qemu-bin
+      - run: chmod +x qemu-bin/qemu-system-riscv32
+      - name: Restore cached RTEMS toolchain and BSP
+        id: rtems-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/rtems/7
+          key: rtems7-riscv-esp32c3db-${{ hashFiles('.gitmodules', 'patches/rtems/*.patch') }}
+      - name: Build the toolchain and BSP
+        if: steps.rtems-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3-dev texinfo unzip \
+                                  libncurses-dev zlib1g-dev pax bison flex ninja-build
+          git submodule update --init --depth=1 src/rsb src/rtems
+          # Local patches first: they are what make the BSP's clock correct.
+          scripts/apply_patches.sh
+          (cd src/rsb/rtems && ../source-builder/sb-set-builder \
+              --prefix="$HOME/rtems/7" 7/rtems-riscv)
+          # Install, not just build: the .pc file the build backend reads is
+          # produced by install, and a built-but-not-installed BSP fails with
+          # "no pkg-config file".
+          (cd src/rtems && ./waf configure -o build-esp32c3db \
+              --rtems-config="$GITHUB_WORKSPACE/config_esp32c3db.ini" \
+              --rtems-tools="$HOME/rtems/7" --prefix="$HOME/rtems/7" \
+           && ./waf build -j "$(nproc)" && ./waf install)
+      - name: Install ESPHome from the pinned source
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -e src/esphome
+      - name: Compile
+        working-directory: tests/rtems-ci
+        run: |
+          ../../.venv/bin/esphome compile reference-node.yaml
+          ../../.venv/bin/esphome compile primitives.yaml
+          ../../.venv/bin/esphome compile scheduler.yaml
+      - name: Run the reference node
+        env:
+          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/qemu-system-riscv32
+        run: |
+          tools/rtems-ci-run.sh -o rtems-results/reference \
+            tests/rtems-ci/.esphome/build/reference-node/reference-node.bin
+      # Both icount modes, because each hides a class of bug the other shows.
+      # delay() passed under icount while returning 7ms early; it only failed
+      # with icount off. See #46.
+      - name: Run the primitives, icount on
+        env:
+          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/qemu-system-riscv32
+        run: |
+          tools/rtems-ci-run.sh -o rtems-results/primitives-icount -t 240 \
+            -M "PRIMITIVES ok" tests/rtems-ci/.esphome/build/primitives/primitives.bin
+      - name: Run the primitives, icount off
+        env:
+          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/qemu-system-riscv32
+        run: |
+          tools/rtems-ci-run.sh -o rtems-results/primitives-realtime -t 240 -I \
+            -M "PRIMITIVES ok" tests/rtems-ci/.esphome/build/primitives/primitives.bin
+      - name: Run the scheduler validation, both ways
+        env:
+          QEMU_ESP32C3: ${{ github.workspace }}/qemu-bin/qemu-system-riscv32
+        run: |
+          tools/rtems-ci-run.sh -o rtems-results/scheduler-icount -t 240 \
+            -M "SCHEDULER ok" tests/rtems-ci/.esphome/build/scheduler/scheduler.bin
+          tools/rtems-ci-run.sh -o rtems-results/scheduler-realtime -t 240 -I \
+            -M "SCHEDULER ok" tests/rtems-ci/.esphome/build/scheduler/scheduler.bin
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rtems-lane-results
+          path: rtems-results

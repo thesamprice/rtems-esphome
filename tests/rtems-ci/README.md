@@ -38,6 +38,50 @@ shutdown` on its own is *not* a failure — a clean `rtems_shutdown_executive()`
 prints it too — so the harness matches the fatal header rather than the banner.
 Verified against a real crash log, not just written to look right.
 
+## The three configs
+
+`reference-node.yaml` is the one that must stay identical to the ESP-IDF
+lane's. The other two are RTEMS-only on purpose — adding their checks to the
+reference node would turn the A/B into a comparison of something else.
+
+| config | what it proves |
+|---|---|
+| `reference-node.yaml` | the same node builds and runs on both stacks |
+| `primitives.yaml` | time, mutexes, ISR wake, priority inheritance |
+| `gpio.yaml` | a pin declared in YAML is really driven, and its interrupt really arrives |
+
+### `gpio.yaml`
+
+An `output:` on GPIO4 and a `binary_sensor:` on GPIO5, declared the ordinary
+way, so what runs is the whole path a real configuration takes: `gpio.py`'s
+codegen, `RTEMSGPIOPin`, the BSP driver, the registers.
+
+The checks are made *at the pad*, through the BSP hook, not by asking the pin
+object what it last wrote. A pin that reported its own last value would pass
+with every register write removed.
+
+The interrupt check needs a stimulus, and nothing is plugged into an emulated
+board. It uses the one thing that can move an undriven pad: its pull resistor.
+Swapping GPIO5 from pull-up to pull-down produces a real falling edge, and
+`GPIOBinarySensor` in interrupt mode publishes *only* when its ISR sets the
+changed flag — so the sensor's state following the resistor is an end-to-end
+proof that the interrupt reached ESPHome's handler.
+
+```
+turn_on drives the pad high                  ok
+turn_off drives the pad low                  ok
+the pad follows the output component         ok
+a pulled-up input reads high                 ok
+driving one pin leaves the other alone       ok
+the pulled-up sensor reads on                ok
+switching to pull-down is seen               ok
+and switching back is seen                   ok
+```
+
+Requires the QEMU fork at `59917ba` or later; before that, `hw/gpio/esp32c3_gpio.c`
+modelled nothing but the strapping register and every one of these would have
+failed.
+
 ## What a pass means
 
 Two `CI-MARKER` lines the firmware prints itself: one from the boot hook, one

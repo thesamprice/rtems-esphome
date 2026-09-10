@@ -1,0 +1,41 @@
+# Drives a pin through ESPHome's own GPIOPin interface and reads it back.
+#
+# Separate from reference-node.yaml, like primitives.yaml, because that config
+# exists to be identical to the ESP-IDF lane's and adding to it would break the
+# comparison it is for.
+#
+# GPIO4 and GPIO5: neither is a strapping pin and neither is wired to UART0,
+# which is the console.
+
+esphome:
+  name: gpio
+  includes:
+    - gpio_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_gpio_test::run(id(pin_out), id(pin_in));"
+
+rtems:
+  bsp: riscv/esp32c3db
+
+logger:
+  level: DEBUG
+
+output:
+  - platform: gpio
+    id: pin_out
+    pin:
+      number: 4
+      mode:
+        output: true
+
+binary_sensor:
+  - platform: gpio
+    id: pin_in
+    name: "Pulled up input"
+    pin:
+      number: 5
+      mode:
+        input: true
+        pullup: true

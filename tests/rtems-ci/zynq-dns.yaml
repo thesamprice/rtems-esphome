@@ -1,0 +1,26 @@
+# Asynchronous DNS on RTEMS, and that it does not stall the main loop.
+#
+# #14 asked for a resolver facade with two backends, because RTEMS was expected
+# to use libbsd's blocking getaddrinfo().  #50 chose lwip, so RTEMS reaches the
+# same asynchronous path ESP-IDF does and what is left is to show it behaves.
+
+esphome:
+  name: dnszynq
+  includes:
+    - zynq_dns_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_dns_test::run();"
+
+rtems:
+  bsp: arm/xilinx_zynq_a9_qemu
+  network:
+    address: 10.0.2.15
+    subnet: 255.255.255.0
+    gateway: 10.0.2.2
+
+logger:
+  level: DEBUG
+
+network:

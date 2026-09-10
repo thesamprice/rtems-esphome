@@ -55,6 +55,7 @@ reference node would turn the A/B into a comparison of something else.
 | `zynq-socket.yaml` | ESPHome's own socket layer accepts a connection over lwip |
 | `zynq-ip.yaml` | addresses parse, format and compare, both families |
 | `zynq-api.yaml` | **a Home Assistant client talks to the node over the native API** |
+| `zynq-dns.yaml` | names resolve asynchronously without stalling the main loop |
 
 ### `gpio.yaml`
 
@@ -288,6 +289,32 @@ fails there.
 **`rtems: network:` brings the interface up**, because there is no `wifi:` or
 `ethernet:` for this platform — which controller a board has is decided when
 the BSP is built, so all a configuration can say is the address.
+
+### `zynq-dns.yaml`
+
+Asynchronous DNS, and — the part that matters — that it does not stall the
+main loop.
+
+```sh
+../../tools/zynq-lwip-run.sh -n -M "CI-MARKER dns ok" \
+    .esphome/build/dnszynq/dnszynq.elf
+```
+
+Three cases, each pumping a loop and reporting the **worst gap between
+iterations**, because "does not block" is the claim an implementation can
+quietly fail:
+
+```
+a numeric address resolves: immediate
+a real hostname resolves: resolved after pumping, worst loop gap 13ms
+a name that does not exist fails: failed after pumping, worst loop gap 13ms
+```
+
+The failure case is the one worth having. A resolver that blocks shows up there
+as a single gap the length of the timeout, and nowhere else.
+
+QEMU's user-mode networking answers DNS at `10.0.2.3`, which a static
+configuration has to be told about — `dns_setserver()` in the test.
 
 ## What a pass means
 

@@ -52,6 +52,7 @@ reference node would turn the A/B into a comparison of something else.
 | `i2c.yaml` | a real device on the bus answers, and one that is not there does not |
 | `uart.yaml` | bytes leave the port and the reply comes back |
 | `zynq-scheduler.yaml` | the same node runs on a second BSP, on a different architecture |
+| `zynq-socket.yaml` | ESPHome's own socket layer accepts a connection over lwip |
 
 ### `gpio.yaml`
 
@@ -200,6 +201,28 @@ already earned that: the first attempt failed at the preprocessor, because
 `<bsp/gpio.h>` `#error`s unless the BSP defines `BSP_GPIO_PIN_COUNT`, and most
 BSPs — the Zynq among them — do not. Nothing on the ESP32-C3 could have found
 that.
+
+### `zynq-socket.yaml`
+
+`esphome::socket` — the layer `api`, `web_server` and `mqtt` all reach the
+network through — accepting a TCP connection from outside the guest.
+
+```sh
+../esp-idf-ci/venv/bin/esphome compile zynq-socket.yaml
+../../tools/zynq-lwip-run.sh -M "CI-MARKER socket ok" \
+    .esphome/build/sockzynq/sockzynq.elf
+```
+
+`tests/zynq-lwip/` proves the stack underneath by talking to lwip directly;
+this proves the seam above it. Both are needed: the first would pass with an
+ESPHome layer that did not work, and the second cannot run without the first.
+
+The interface is brought up in the test rather than by a `network` component,
+because there is not one yet — that is #13 and #14. Nothing below that line
+knows it.
+
+**Not on the ESP32-C3**, because that machine has no NIC QEMU can give it
+(#30). This lane is the reason the second BSP exists.
 
 ## What a pass means
 

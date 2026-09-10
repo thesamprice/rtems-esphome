@@ -53,6 +53,7 @@ reference node would turn the A/B into a comparison of something else.
 | `uart.yaml` | bytes leave the port and the reply comes back |
 | `zynq-scheduler.yaml` | the same node runs on a second BSP, on a different architecture |
 | `zynq-socket.yaml` | ESPHome's own socket layer accepts a connection over lwip |
+| `zynq-ip.yaml` | addresses parse, format and compare, both families |
 
 ### `gpio.yaml`
 
@@ -223,6 +224,37 @@ knows it.
 
 **Not on the ESP32-C3**, because that machine has no NIC QEMU can give it
 (#30). This lane is the reason the second BSP exists.
+
+### `zynq-ip.yaml`
+
+`network/ip_address.h` on RTEMS. Its POSIX arm is *reused* rather than a fourth
+representation added — the arm is `<arpa/inet.h>`, `struct in_addr` and
+`inet_pton`, with nothing host-specific in it — and this is what checks that
+the reuse actually holds. An arm that compiles but parses wrongly would be
+worse than a new one.
+
+```sh
+../esp-idf-ci/venv/bin/esphome compile zynq-ip.yaml
+../../tools/zynq-lwip-run.sh -n -M "CI-MARKER ip ok" \
+    .esphome/build/ipzynq/ipzynq.elf
+```
+
+`-n` because this one never listens; without it the harness waits out its
+timeout for a connection that is not coming.
+
+The check that earns its place is the octet constructor agreeing with the
+parser — that is what catches a byte-order mistake, and a byte-order mistake is
+exactly what reusing another platform's arm risks.
+
+**One result worth knowing rather than being surprised by:** `192.168.7` parses,
+as `192.168.0.7`. That is `inet_aton` behaving as it always has — `a.b.c` is
+`a.b` plus a 16-bit `c` — and it means the same string in the same YAML is a
+valid address here and a rejected one on a platform whose arm uses lwip's
+`ipaddr_aton`. Asserted rather than left implicit.
+
+`is_connected()` is also checked, and expected to be **false**: no interface is
+brought up in this configuration, and the platform asks the stack rather than
+assuming a link the way host does.
 
 ## What a pass means
 

@@ -389,6 +389,61 @@ A released open-drain line with no pull-up floats and reads back whatever it
 last was, so `pin_mode()` warns when `open_drain` is asked for without
 `pullup`.
 
+## Networking on this lane: no, and the numbers say why
+
+The short answer is that this lane is a CPU and core-portability proof, not a
+networking lane. Zynq A9 is the networking target. Three separate things each
+close the door, and any one of them would be enough.
+
+**WiFi is not emulated.** Not partially — at all. Espressif say so in their own
+header, `include/hw/riscv/esp32c3_intmatrix.h`:
+
+```c
+/* Since wifi is not supported on ESP32-C3 target emulation,
+   reuse its interrupt source for ethernet */
+#define ETS_ETH_MAC_INTR_SOURCE     ETS_WIFI_MAC_INTR_SOURCE
+```
+
+No MAC, no baseband, no PHY, no radio. The only WiFi in the tree is
+power-domain register fields and interrupt-source names, one of which is
+deliberately repurposed for Ethernet.
+
+**The Ethernet QEMU does offer is for a device the chip does not have.**
+`hw/riscv/esp32c3.c` instantiates an OpenCores `open_eth` at
+`DR_REG_EMAC_BASE` (`0x600CD000`). The ESP32-C3 is a WiFi+BLE part with no
+Ethernet MAC in silicon; Espressif reuse the ESP32's EMAC base as a convenient
+hole in the C3 memory map. A driver written for it would be a driver for
+hardware that does not exist.
+
+**And rtems-lwip has no OpenCores driver anyway.** `rtemslwip/` carries
+`beaglebone`, `greth`, `tms570` and the Xilinx/Zynq family. Using QEMU's
+`open_eth` would mean writing one first.
+
+### The footprint, for completeness
+
+Even given a driver, rtems-lwip as configured does not fit. Its RAM is
+configured rather than emergent, so this is arithmetic rather than an
+estimate — `rtemslwip/include/lwipopts.h` against what a minimal RTEMS image
+leaves free on this part:
+
+| | |
+|---|---|
+| available (`.work`, measured from `hello.exe`) | 308.5 KiB |
+| lwIP heap, `MEM_SIZE` | 2048.0 KiB |
+| pbuf pool, `PBUF_POOL_SIZE 512` x `PBUF_POOL_BUFSIZE 1600` | 800.0 KiB |
+| **two largest pools alone** | **2848.0 KiB** |
+
+**9.23x the whole of the part's usable RAM**, and that ignores the pbuf struct
+overhead and every other pool, so it is a floor.
+
+Be fair about what that does and does not show. It is not a claim that lwIP
+cannot run on 320 KiB — lwIP is designed to run in tens of KiB, and `lwipopts.h`
+is exactly the knob for it. What it shows is that **rtems-lwip's shipped
+configuration is tuned for the Zynq lane, which has 250 MiB**, and that
+bringing it to this part means a C3-specific `lwipopts.h`, not a recompile.
+
+Flash is not the constraint: a minimal image is 87.7 KiB of a 4 MiB part.
+
 ## Test results
 
 459 tests, the whole suite less the performance families the runner defers by

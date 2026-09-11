@@ -28,7 +28,14 @@ ENV PATH=/opt/rtems/7/bin:$PATH
 
 # Local patches first: they are what make the BSP's clock correct and its
 # headers installable.  Building before applying them would bake in the bugs.
-RUN scripts/apply_patches.sh
+#
+# Named explicitly rather than left to apply everything, because the script
+# treats an unfetched submodule as a quiet skip -- correct on a developer's
+# default clone, wrong here, where it would produce an unpatched image that
+# builds and passes and is wrong in a way nothing downstream can see. Naming
+# the module makes a missing checkout an error instead. The -c pass afterwards
+# is belt and braces: it re-checks and fails if anything did not land.
+RUN scripts/apply_patches.sh rtems && scripts/apply_patches.sh -c rtems
 
 RUN cd src/rsb/rtems \
     && ../source-builder/sb-set-builder --prefix=/opt/rtems/7 7/rtems-riscv \

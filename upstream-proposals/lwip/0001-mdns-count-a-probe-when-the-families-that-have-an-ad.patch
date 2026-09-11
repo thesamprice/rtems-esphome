@@ -1,0 +1,87 @@
+From 426c79ebf563dab2ff9c5339fad87def4060981f Mon Sep 17 00:00:00 2001
+From: Samuel Price <thesamprice@gmail.com>
+Date: Fri, 11 Sep 2026 14:20:09 -0400
+Subject: [PATCH] mdns: count a probe when the families that have an address
+ were sent
+
+mdns_probe_and_announce() incremented sent_num only when the IPv4 probe
+and the IPv6 probe both returned ERR_OK.  The IPv4 arm is guarded -- it
+waits until the netif has an address -- and the IPv6 arm is not.
+
+On a dual-stack build whose netif holds only an IPv4 address,
+mdns_send_probe(netif, &v6group) therefore fails with ERR_RTE on every
+attempt, sent_num never reaches MDNS_PROBE_COUNT, and the state machine
+never leaves MDNS_STATE_PROBE_WAIT.  The responder probes indefinitely
+and never announces, so the host is never advertised.
+
+Gate IPv6 the way IPv4 already is, using the
+ip6_addr_isvalid(netif_ip6_addr_state(...)) walk this file already
+performs in two other places, and count a probe when every family that
+has an address went out and at least one did.
+
+Observed on an IPv4-only interface of a LWIP_IPV6=1 build: 299 probe
+packets in 12.6 seconds and no announcement, read from a capture of the
+netdev.  With this change the same test sends three probes and two
+announcements and then goes quiet, as RFC 6762 section 8 describes.
+---
+ src/apps/mdns/mdns.c | 38 ++++++++++++++++++++++++++++++--------
+ 1 file changed, 30 insertions(+), 8 deletions(-)
+
+diff --git a/src/apps/mdns/mdns.c b/src/apps/mdns/mdns.c
+index b3ca2f3..02b019e 100644
+--- a/src/apps/mdns/mdns.c
++++ b/src/apps/mdns/mdns.c
+@@ -2298,20 +2298,42 @@ mdns_probe_and_announce(void* arg)
+     case MDNS_STATE_OFF:
+     case MDNS_STATE_PROBE_WAIT:
+     case MDNS_STATE_PROBING:
++    {
++      int v4_wanted = 0, v4_sent = 0;
++      int v6_wanted = 0, v6_sent = 0;
+ #if LWIP_IPV4
+       /*if ipv4 wait with probing until address is set*/
+-      if (!ip4_addr_isany_val(*netif_ip4_addr(netif)) &&
+-          mdns_send_probe(netif, &v4group) == ERR_OK)
++      if (!ip4_addr_isany_val(*netif_ip4_addr(netif))) {
++        v4_wanted = 1;
++        v4_sent = (mdns_send_probe(netif, &v4group) == ERR_OK);
++      }
+ #endif
+-      {
+ #if LWIP_IPV6
+-        if (mdns_send_probe(netif, &v6group) == ERR_OK)
+-#endif
+-        {
+-          mdns->state = MDNS_STATE_PROBING;
+-          mdns->sent_num++;
++      {
++        int i;
++        /* Only probe over a family the netif has an address for.  Without this
++           the IPv6 probe returns ERR_RTE on an IPv4-only configuration of a
++           dual-stack build, and since a probe counted only when every family
++           succeeded, sent_num never advanced and the responder probed forever
++           without ever announcing. */
++        for (i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
++          if (ip6_addr_isvalid(netif_ip6_addr_state(netif, i))) {
++            v6_wanted = 1;
++            break;
++          }
++        }
++        if (v6_wanted) {
++          v6_sent = (mdns_send_probe(netif, &v6group) == ERR_OK);
+         }
+       }
++#endif
++      /* A probe counts when every family that has an address went out, and at
++         least one did. */
++      if ((v4_wanted || v6_wanted) && v4_wanted == v4_sent && v6_wanted == v6_sent) {
++        mdns->state = MDNS_STATE_PROBING;
++        mdns->sent_num++;
++      }
++    }
+ 
+       if (mdns->sent_num >= MDNS_PROBE_COUNT) {
+         mdns->state = MDNS_STATE_ANNOUNCE_WAIT;
+-- 
+2.39.5 (Apple Git-154)
+

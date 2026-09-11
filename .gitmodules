@@ -136,7 +136,6 @@
 	#url = https://github.com/thesamprice/rtems-lwip.git
 	branch = rtems-esphome-integration
 	update = none
-	update = none
 
 [submodule "src/rtems-libbsd"]
 	path = src/rtems-libbsd

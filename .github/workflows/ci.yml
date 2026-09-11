@@ -44,7 +44,13 @@ jobs:
     container: ghcr.io/${{ github.repository_owner }}/rtems-esphome-toolchain:latest
     steps:
       - uses: actions/checkout@v4
-      - run: 'git config --global url."https://github.com/".insteadOf git@github.com:' 
+      # Two things, and both are properties of running in a container rather
+      # than of the project.  actions/checkout runs as the runner user while the
+      # job runs as root, so git refuses the tree as dubiously owned; and the
+      # submodule URLs are ssh, which a runner has no key for.
+      - run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global url."https://github.com/".insteadOf git@github.com:
       - run: git submodule update --init --checkout --depth=1 src/esphome
       - uses: actions/setup-python@v5
         with:
@@ -83,7 +89,13 @@ jobs:
     container: ghcr.io/${{ github.repository_owner }}/rtems-esphome-toolchain:latest
     steps:
       - uses: actions/checkout@v4
-      - run: 'git config --global url."https://github.com/".insteadOf git@github.com:' 
+      # Two things, and both are properties of running in a container rather
+      # than of the project.  actions/checkout runs as the runner user while the
+      # job runs as root, so git refuses the tree as dubiously owned; and the
+      # submodule URLs are ssh, which a runner has no key for.
+      - run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global url."https://github.com/".insteadOf git@github.com:
       - run: git submodule update --init --checkout --depth=1 src/esphome
       # No setup-python: the image already has 3.12 and a second interpreter
       # only adds PATH confusion.

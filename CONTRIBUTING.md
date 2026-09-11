@@ -30,6 +30,42 @@ them does not get merged, however convenient it is.
 12. **Every QEMU test has a hard timeout and a machine-readable PASS/FAIL
     marker.**
 
+## Remotes: nothing here pushes upstream
+
+Run `scripts/setup-remotes.sh` once after cloning. It points every
+submodule's push at a fork.
+
+This project tracks six upstreams and contributes to none of them without
+being asked, so a push that reaches `rtems/rtos/rtems`, `esphome/esphome`,
+`espressif/qemu` or savannah lwIP is a mistake, not a contribution. Those
+remotes are configured for *reading*.
+
+`.gitmodules` cannot express this on its own: git reads `url` from it but
+not `pushurl`, so a fresh clone has every read-only submodule pushing
+straight at its upstream. Hence the script.
+
+It was not a hypothetical risk. A `git push origin rtems` in `src/esphome`
+went to `esphome/esphome`, and failed only because the URL was https and no
+credentials were configured.
+
+Three cases, decided by whether a fork exists and whether it has the pinned
+commit:
+
+| case | fetch | push |
+|---|---|---|
+| fork has the pin | fork | fork |
+| fork stale or behind | upstream, so the pin resolves | fork |
+| no fork | upstream | a path that does not exist, failing with the reason |
+
+Checking the pin is the part worth not skipping. `TheSamPrice/rtems` exists,
+but its head is months behind and does not contain the commit `src/rtems` is
+pinned to — making it the fetch URL would break `git submodule update` for
+anyone cloning fresh.
+
+Never put a token in a remote URL. `~/.rtems_token.sh` exports `RTEMS_TOKEN`
+for gitlab.rtems.org; a URL of the form `https://oauth2:<token>@...` ends up
+in `.git/config` in plain text and leaks into any output that prints remotes.
+
 ## Commit messages
 
 Say what the platform dependency was and what replaced it. The template:

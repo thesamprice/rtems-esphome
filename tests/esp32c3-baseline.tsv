@@ -1,0 +1,59 @@
+# riscv/esp32c3db testsuite baseline
+#
+# Recorded against RTEMS pin b03d4c0119 with patches/rtems/ applied, the
+# Espressif QEMU fork at 2546b01, and the toolchain in ~/rtems/7 (GCC 15.2.0,
+# RSB 105f43d299).  460 tests: 422 PASS, 24 FAIL, 14 XFAIL.
+#
+# Compared by name, not by count, so a new failure cannot hide behind a fixed
+# one.  A name here that now passes is as much a change as a new name.
+#
+# Every FAIL below is the same thing and none of them is a defect: the part has
+# 320 KiB of RAM (RamBase 0x3fc80000, RamEnd 0x3fcd0000), of which 307 KiB is
+# work area, and these tests want a 512 KiB RAM disk -- 1.67x the whole work
+# area.  The fstests share ramdisk_support.h (RAMDISK_BLOCK_SIZE 512 x
+# RAMDISK_BLOCK_COUNT 1024); fsdosfssync01 declares its own at the same size
+# and fsdosfsformat01 asks for 1024 sparse sectors in its FAT16 case.  They are
+# unrunnable on this silicon rather than broken on it, which is why they are
+# recorded rather than chased.
+#
+# Format: <status> <tab> <test name>
+
+FAIL	capture01
+FAIL	fsdosfsformat01
+FAIL	fsdosfssync01
+FAIL	fsrfsbitmap01
+FAIL	fsrofs01
+FAIL	mdosfs_fserror
+FAIL	mdosfs_fspatheval
+FAIL	mdosfs_fsrdwr
+FAIL	mdosfs_fsrename
+FAIL	mdosfs_fsrenamelongname
+FAIL	mdosfs_fsrmdirparent
+FAIL	mdosfs_fsscandir01
+FAIL	mdosfs_fsstatvfs
+FAIL	mdosfs_fstime
+FAIL	mrfs_fserror
+FAIL	mrfs_fsfpathconf
+FAIL	mrfs_fslink
+FAIL	mrfs_fspatheval
+FAIL	mrfs_fspermission
+FAIL	mrfs_fsrdwr
+FAIL	mrfs_fsrename
+FAIL	mrfs_fsrmdirparent
+FAIL	mrfs_fsscandir01
+FAIL	mrfs_fstime
+
+XFAIL	imfs_fsrenameexisting
+XFAIL	imfs_fsrenamepermexisting
+XFAIL	imfs_fssymlink
+XFAIL	mdosfs_fsrenameexisting
+XFAIL	mdosfs_fsrenamemaxlinks
+XFAIL	mimfs_fsrenameexisting
+XFAIL	mimfs_fsrenamemaxlinks
+XFAIL	mimfs_fsrenamepermexisting
+XFAIL	mimfs_fssymlink
+XFAIL	mrfs_fsrenameexisting
+XFAIL	mrfs_fsrenamelongname
+XFAIL	mrfs_fsrenamemaxlinks
+XFAIL	mrfs_fsrenamepermexisting
+XFAIL	mrfs_fssymlink

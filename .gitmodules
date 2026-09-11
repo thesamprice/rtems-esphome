@@ -169,3 +169,25 @@
 	url = https://gitlab.rtems.org/rtems/tools/rtems-source-builder.git
 	branch = main
 	update = none
+
+[submodule "src/ArduinoJson"]
+	path = src/ArduinoJson
+	# ArduinoJson, needed by esphome's json component and so by mqtt and
+	# anything else that auto-loads it.  Header-only, which is why it is the
+	# first third-party library this port vendors: an include path and nothing
+	# to compile.
+	#
+	# Vendored rather than fetched at build time.  Every other input here is a
+	# pinned submodule that scripts/manifest.sh reports, and a library is no
+	# different -- see #69, where the alternative of teaching the build backend
+	# to fetch was considered and rejected as a lot of machinery for a header.
+	#
+	# The RTEMS build backend finds it through "library_path" in the rtems:
+	# block, or ESPHOME_RTEMS_LIBRARY_PATH.  Nothing is implicit: a
+	# configuration that needs a library says where to look.
+	#
+	# Pinned at v7.4.3, which is the version esphome's json component asks
+	# PlatformIO for on every other platform.
+	url = https://github.com/bblanchon/ArduinoJson.git
+	branch = v7.4.3
+	update = none

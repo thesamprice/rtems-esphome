@@ -54,7 +54,10 @@ RUN cd src/rsb/rtems \
          || ( echo "=== RSB error report ==="; \
               tail -n 200 rsb-report-*.txt 2>/dev/null; \
               false ) ) \
-    && cp tar/7/rtems-riscv.tar.bz2 /opt/rtems-toolchain-riscv.tar.bz2 \
+    && ( cp tar/rtems-riscv.tar.bz2 /opt/rtems-toolchain-riscv.tar.bz2 \
+         || ( echo "expected tar/rtems-riscv.tar.bz2, and tar/ holds:"; \
+              ls -l tar/ || true; \
+              false ) ) \
     && rm -rf /src/src/rsb/rtems/build /src/src/rsb/rtems/tar /root/.cache
 
 # Install, not just build.  The .pc file the ESPHome build backend reads is

@@ -350,6 +350,45 @@ false refusal, and it is the safe direction to be wrong in.
 
 `tests/bsp-pin/run.sh` builds and runs the test for this.
 
+## Open drain, and what it costs
+
+`<bsp/gpio.h>` has `DIGITAL_INPUT`, `DIGITAL_OUTPUT` and `BSP_SPECIFIC`, and
+no open-drain mode. The ESP32-C3 has the bit — `GPIO_PINn` bit 2,
+`PAD_DRIVER` — and the I2C driver sets it directly, because it is inside the
+BSP and may.
+
+Above the BSP there is no way to ask for it, so `components/rtems` builds it
+from the two halves the API does have: `digital_write(false)` selects output
+and drives low, `digital_write(true)` selects input and lets the pull-up take
+the line. That is what open drain is, and it needs no API change and no QEMU
+model change — which matters, because the model does not implement
+`PAD_DRIVER` either.
+
+The cost, measured by `tests/bsp-opendrain`:
+
+```
+open-drain release costs 6.33x a push-pull write
+```
+
+**Read the ratio, not the nanoseconds.** Both halves are measured with the
+same counter in the same run, so whatever the clock is really doing cancels
+out of the ratio. The absolute figures are not silicon figures, for two
+independent reasons: the counter is the 16 MHz systimer and guest time runs
+several times fast under this QEMU (see "The QEMU counter loses a tick on
+every read" above), and `-icount shift=0` charges one cycle per instruction
+with no memory or peripheral-bus stall — which is exactly where writing
+IO_MUX costs on real hardware.
+
+So the emulated figure, 76 ns for a release against 1-Wire's 15 us deadline,
+is a floor and a loose one. What it supports is a negative claim: emulated
+open drain is **not obviously too slow** for 1-Wire, which is what the
+question was. Two orders of magnitude of headroom would have to evaporate
+before it failed. Settling it needs hardware.
+
+A released open-drain line with no pull-up floats and reads back whatever it
+last was, so `pin_mode()` warns when `open_drain` is asked for without
+`pullup`.
+
 ## Test results
 
 459 tests, the whole suite less the performance families the runner defers by

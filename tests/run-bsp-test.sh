@@ -1,21 +1,26 @@
 #!/bin/sh
 #
-# Build and run tests/bsp-pin/init.c on riscv/esp32c3db.
+# Build and run a standalone BSP test on riscv/esp32c3db.
 #
 # Standalone rather than a testsuite entry: the BSP arrives here as patches
 # rather than as a tree we own, so adding a spec/build test would mean another
 # patch to maintain against every rebase.  This links against a staged install
 # of the BSP, which is what an application does.
 #
-# Usage:  tests/bsp-pin/run.sh [-o OUTDIR]
+# Usage:  tests/run-bsp-test.sh <test-dir> [OUTDIR]
+#
+#   tests/run-bsp-test.sh tests/bsp-pin
+#   tests/run-bsp-test.sh tests/bsp-opendrain
 #
 # Needs: the riscv-rtems7 toolchain (default $HOME/rtems/7) and the Espressif
 # QEMU fork that scripts/build_esp_qemu.sh leaves in src/esp-qemu/build/.
 
 set -eu
 
-top="$(cd "$(dirname "$0")/../.." && pwd)"
-OUT=${1:-$top/bsp-pin-results}
+top="$(cd "$(dirname "$0")/.." && pwd)"
+TESTDIR=${1:?usage: run-bsp-test.sh <test-dir> [outdir]}
+NAME=$(basename "$TESTDIR")
+OUT=${2:-$top/$NAME-results}
 PREFIX=${RTEMS_TOOLS_PREFIX:-$HOME/rtems/7}
 BUILD=${RTEMS_BUILD:-$top/src/rtems/build-esp32c3db}
 QEMU=${QEMU_ESP32C3:-$top/src/esp-qemu/build/qemu-system-riscv32}
@@ -37,12 +42,12 @@ lib=$(find "$stage" -type d -name lib -path '*esp32c3db*' | head -1)
 
 "$PREFIX/bin/riscv-rtems7-gcc" -march=rv32imc -mabi=ilp32 \
   -isystem "$lib/include" -B "$lib" -qrtems -Wl,--gc-sections \
-  -o "$OUT/pintest.exe" "$top/tests/bsp-pin/init.c"
+  -o "$OUT/$NAME.exe" "$top/$TESTDIR/init.c"
 
 # Direct boot image: objcopy -O binary padded to the flash size, as
 # tools/esp32c3-run-tests.sh explains.  bs takes a plain byte count because
 # "1m" is BSD's spelling and GNU dd rejects it.
-"$PREFIX/bin/riscv-rtems7-objcopy" -O binary "$OUT/pintest.exe" "$OUT/flash.raw"
+"$PREFIX/bin/riscv-rtems7-objcopy" -O binary "$OUT/$NAME.exe" "$OUT/flash.raw"
 dd if=/dev/zero of="$OUT/flash.bin" bs=1048576 count=$((FLASH_SIZE / 1048576)) 2>/dev/null
 dd if="$OUT/flash.raw" of="$OUT/flash.bin" conv=notrunc 2>/dev/null
 [ "$(wc -c < "$OUT/flash.bin" | tr -d ' ')" = "$FLASH_SIZE" ] || { echo "bad image size" >&2; exit 1; }
@@ -66,5 +71,6 @@ cat "$log"
 
 # The marker, not the exit status: QEMU is killed rather than waited on, so
 # its status says nothing about the test.
-grep -q "CI-MARKER pin ok" "$log" || { echo "FAILED: marker absent" >&2; exit 1; }
+# The marker, not the exit status: QEMU is killed rather than waited on.
+grep -q "CI-MARKER" "$log" || { echo "FAILED: no CI-MARKER in $log" >&2; exit 1; }
 echo "PASS"

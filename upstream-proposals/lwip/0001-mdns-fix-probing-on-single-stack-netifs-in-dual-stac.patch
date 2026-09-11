@@ -28,6 +28,35 @@ announcement.  With this change the responder sends three probes
 followed by two announcements and completes, as RFC 6762 sections 8.1
 and 8.3 describe.
 ---
+
+Notes for the list, not part of the commit message:
+
+* No regression test accompanies this.  test/unit/mdns/test_mdns.c today
+  covers name parsing and building only -- readname_*, add_label_*,
+  domain_eq_* -- and has no netif, no capturing linkoutput and nothing
+  that drives mdns_probe_and_announce() or sys_check_timeouts().  Testing
+  the four interesting configurations
+
+      v4+v6 build, IPv4-only netif   -> probing completes
+      v4+v6 build, IPv6-only netif   -> probing completes
+      v4+v6 build, both configured   -> both probed, completes
+      v4+v6 build, neither           -> waits, does not count a probe
+
+  therefore needs scaffolding added to that file rather than a case added
+  to an existing fixture.  I am happy to write it if you would like the
+  fix and the test together -- say so and I will send a v2.
+
+* How this was found and verified: an lwIP 2.2 build with LWIP_IPV4=1 and
+  LWIP_IPV6=1 on an interface holding only an IPv4 address, observed from
+  a packet capture of the interface rather than from inside the
+  application.  Before: 299 probes in 12.6 s, no announcement, and the
+  responder never leaves MDNS_STATE_PROBE_WAIT.  After: three probes at
+  the usual spacing, then two announcements, then quiet.
+
+* The IPv6-only half of the defect is by inspection rather than by
+  measurement.  I have run the IPv4-only case; the IPv6-only case follows
+  from the same control flow -- the outer LWIP_IPV4 condition guards the
+  block containing the IPv6 probe -- but I have not exercised it.
  src/apps/mdns/mdns.c | 37 ++++++++++++++++++++++++++++---------
  1 file changed, 28 insertions(+), 9 deletions(-)
 

@@ -1,0 +1,39 @@
+Drop sis from the riscv toolchain build set.
+
+sis is the RTEMS instruction simulator.  Nothing in this project runs it:
+every lane runs under QEMU, and the image exists to provide a compiler, a
+BSP and QEMU.  Upstream RSB appends it to 7/rtems-riscv.bset as the last
+package in the set, so it contributes nothing to the toolchain and fails
+at the very end of a seventy-minute build.
+
+It has failed three consecutive CI builds and blocks every other job,
+because both lanes pull an image that is never published.  What is known:
+
+  * The source downloads correctly -- 303.5 kB, complete -- from
+    gitlab.rtems.org after the dl.rtems.org content cache 404s, which it
+    does for several other packages in the same run without harm.  The
+    first diagnosis, that this was a transient outage, was wrong.
+  * The build then fails about four seconds in.  The RSB error report
+    ends part way through the %build trace, right after the setup step's
+    "rm -rf rtems-sis-<hash>", so the failure is in unpacking or
+    configuring rather than anywhere deep.
+  * The RSB says as much itself: "In some cases the error appears only in
+    the complete build log".  That log is inside the build container and
+    is discarded with it.
+
+So this is a stopgap, not a diagnosis, and it is headed as one.  Why sis
+does not build on Ubuntu 24.04 is worth answering -- it is upstream's
+build set, and anyone building a riscv toolchain from this pin hits it --
+but not at seventy minutes per iteration while it blocks everything else.
+
+Drop this patch once that is understood.  See rtems-esphome#76.
+
+diff --git a/rtems/config/7/rtems-riscv.bset b/rtems/config/7/rtems-riscv.bset
+index 3b76448..41b69a4 100644
+--- a/rtems/config/7/rtems-riscv.bset
++++ b/rtems/config/7/rtems-riscv.bset
+@@ -3,4 +3,3 @@
+ %define with_libgomp
+ %define with_newlib_tls
+ %include 7/rtems-default
+-devel/sis-2-1

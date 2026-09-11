@@ -35,7 +35,7 @@ ENV PATH=/opt/rtems/7/bin:$PATH
 # builds and passes and is wrong in a way nothing downstream can see. Naming
 # the module makes a missing checkout an error instead. The -c pass afterwards
 # is belt and braces: it re-checks and fails if anything did not land.
-RUN scripts/apply_patches.sh rtems && scripts/apply_patches.sh -c rtems
+RUN scripts/apply_patches.sh rtems rsb && scripts/apply_patches.sh -c rtems rsb
 
 # The RSB writes the actual compiler or configure error into a report file and
 # prints only "Build FAILED" on the console, so a failure here is undiagnosable

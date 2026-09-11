@@ -123,7 +123,13 @@ static void run() {
     dns_setserver(0, &dnsserver);
   }
 
-  one("a real hostname resolves", "localhost.", true, 10000);
+  // A name real DNS actually answers.  This used to ask for "localhost.",
+  // which no DNS server serves -- a resolver answers it locally, from the hosts
+  // file, without a query ever leaving.  The host's getaddrinfo() succeeds on
+  // it and `dig localhost.` returns nothing, which is the whole difference.
+  // Through slirp the guest reaches a real DNS server, so it was asking the one
+  // party guaranteed not to know.
+  one("a real hostname resolves", "example.com", true, 10000);
 
   // The case that matters most: a name that cannot resolve must fail without
   // taking the loop with it.

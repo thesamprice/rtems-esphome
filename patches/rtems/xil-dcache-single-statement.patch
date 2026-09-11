@@ -1,0 +1,67 @@
+Make the Xil_DCache* shims single statements.
+
+Xil_DCacheInvalidateRange() expands to two statements with no enclosing
+block, so a caller that does not brace its if body gets the wrong
+behaviour or no compile at all.  Demonstrated against the installed
+header, cross-compiling for arm/xilinx_zynq_a9_qemu:
+
+    if (!coherent)
+      Xil_DCacheInvalidateRange(buf, sizeof(buf));
+    else
+      return 1;
+
+  error: 'else' without a previous 'if'
+
+and without the else it compiles and invalidates unconditionally, which
+is the worse of the two: an unconditional invalidate of a DMA buffer
+presents as rare data corruption rather than as a failure.
+
+Every caller in the tree today -- rtems-lwip's xemacpsif_dma.c and
+bsps/shared/dev/nand/xnandpsu.c -- braces its if bodies, so neither has
+bitten.  This is a trap rather than a live defect, which is the argument
+for fixing it rather than leaving it: the next caller is as likely to be
+braceless as not.
+
+Both macros get the wrapper, including the single-statement one, because
+a caller cannot tell them apart and consistency is free here.
+
+Upstream, alongside the other RTEMS-side fixes from this port.  See
+rtems-esphome#73.
+
+diff --git a/bsps/include/bsp/xil-compat-common.h b/bsps/include/bsp/xil-compat-common.h
+index f101119..d81e355 100644
+--- a/bsps/include/bsp/xil-compat-common.h
++++ b/bsps/include/bsp/xil-compat-common.h
+@@ -79,11 +79,29 @@ static inline void Xil_Out32(uintptr_t addr, uint32_t value)
+ }
+ 
+ #include <rtems/rtems/cache.h>
++/*
++ * do { } while (0), so these behave as one statement.
++ *
++ * Xil_DCacheInvalidateRange() expands to two, and without the wrapper
++ *
++ *   if (cfg.IsCacheCoherent == 0)
++ *     Xil_DCacheInvalidateRange(p, n);
++ *
++ * invalidates unconditionally, while putting an else after it does not compile
++ * at all -- "error: 'else' without a previous 'if'".  Every caller in the tree
++ * happens to brace its if bodies, so neither has bitten; the next one is as
++ * likely not to, and an unconditional invalidate of a DMA buffer presents as
++ * rare data corruption rather than as a failure.
++ */
+ #define Xil_DCacheInvalidateRange(addr, len) \
+-  rtems_cache_flush_multiple_data_lines((void*)addr, len); \
+-  rtems_cache_invalidate_multiple_data_lines((void*)addr, len)
++  do { \
++    rtems_cache_flush_multiple_data_lines((void*)addr, len); \
++    rtems_cache_invalidate_multiple_data_lines((void*)addr, len); \
++  } while (0)
+ #define Xil_DCacheFlushRange(addr, len) \
+-  rtems_cache_flush_multiple_data_lines((void*)addr, len)
++  do { \
++    rtems_cache_flush_multiple_data_lines((void*)addr, len); \
++  } while (0)
+ 
+ #include <unistd.h>
+ #include <bspopts.h>

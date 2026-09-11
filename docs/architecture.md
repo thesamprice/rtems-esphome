@@ -51,6 +51,27 @@ Do not route everything through it. Three specific gaps drive this:
 **The ESPHome-facing API encodes ESPHome's semantics. OSAL is one
 implementation source, not the definition of those semantics.**
 
+All three gaps are now measured rather than predicted, by
+`tests/rtems-ci/zynq-threads.yaml` (#34):
+
+- **`try_lock()`** works, and the RTEMS mutex is a binary semaphore with
+  priority inheritance. One divergence came out of testing it: RTEMS permits
+  nested access by the owner, so `try_lock()` succeeds from the holding task
+  where a FreeRTOS mutex would refuse. Recorded in #71, not worked around —
+  the alternatives cost priority inheritance, which is load-bearing.
+- **The task argument** is a non-problem in the end. `rtems_task_start()` takes
+  a per-task argument directly, so the classic API *is* the helper OSAL could
+  not provide and no shim was needed. Two tasks started from one entry point
+  with different arguments is a check in that lane.
+- **ISR safety** of the wake path is #8's, and holds.
+
+And a fourth thing, which the original audit could not have seen: **the thread
+model decides most of this.** Selecting `ESPHOME_THREAD_MULTI_ATOMICS` compiles
+out `freertos_queue.h`, `static_task.*` and `main_task.*` entirely, so four of
+the six files the audit flagged never needed porting. What is left needing care
+is not the helpers themselves but their behaviour across tasks — this port has
+other tasks whether or not ESPHome creates any, because lwIP runs its own.
+
 ## Networking goes straight to BSD sockets
 
 ```

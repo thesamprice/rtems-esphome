@@ -28,6 +28,17 @@
 #   -M TEXT   required marker, repeatable, REPLACING the defaults -- for a
 #             config that does not print them, such as a self-test
 #   -I        disable instruction counting
+#   -Q FILE   QMP commands to run before the guest starts, one JSON object per
+#             line.  Implies -S: QEMU is started paused, the commands are sent,
+#             then the guest is released with "cont".
+#
+#             This exists because some device state cannot be set from the
+#             command line.  QEMU's tmp105 registers its "temperature" property
+#             in instance_init, so -device tmp105,temperature=25000 does apply
+#             it -- and then realize() calls tmp105_reset(), which sets
+#             temperature back to 0.  Setting it over QMP after realize is the
+#             only way to give the device a value, and a sensor reading 0 C is
+#             indistinguishable from a sensor that was never read.
 #
 # $QEMU_DATA_DIR, if set, is passed as -L.  QEMU finds pc-bios relative to its
 # own build tree, so a binary copied somewhere else -- a CI artifact, an
@@ -65,6 +76,7 @@ FLASH_SIZE=${ESP_CI_FLASH_SIZE:-$((4 * 1024 * 1024))}
 DATA_ARGS=""
 [ -n "${QEMU_DATA_DIR:-}" ] && DATA_ARGS="-L ${QEMU_DATA_DIR}"
 ICOUNT_ARGS="-icount shift=0,sleep=off"
+QMP_FILE=""
 
 MARKERS=("CI-MARKER boot ok" "CI-MARKER scheduler ok")
 
@@ -75,7 +87,7 @@ MARKERS=("CI-MARKER boot ok" "CI-MARKER scheduler ok")
 FAILSIGS='\*\*\* FATAL \*\*\*|fatal source:|RTEMS_FATAL_SOURCE|assertion .* failed'
 
 replaced=0
-while getopts "q:o:t:m:M:I" opt; do
+while getopts "q:o:t:m:M:IQ:" opt; do
   case $opt in
     q) QEMU=$OPTARG;;
     o) OUT=$OPTARG;;
@@ -84,6 +96,7 @@ while getopts "q:o:t:m:M:I" opt; do
     M) if [ $replaced = 0 ]; then MARKERS=(); replaced=1; fi
        MARKERS+=("$OPTARG");;
     I) ICOUNT_ARGS="";;
+    Q) QMP_FILE=$OPTARG;;
     *) exit 2;;
   esac
 done
@@ -145,13 +158,35 @@ fi
 printf 'image: %s (%s bytes)\n' "$IMAGE" "$(wc -c < "$IMAGE" | tr -d ' ')"
 
 rm -f "$log"
+
+QMP_ARGS=""
+if [ -n "$QMP_FILE" ]; then
+  [ -r "$QMP_FILE" ] || { echo "error: cannot read QMP file: $QMP_FILE" >&2; exit 2; }
+  # A short path: AF_UNIX is capped near 104 characters and an output directory
+  # under a scratch tree can exceed it on its own.
+  QMP_SOCK=$(mktemp -u /tmp/rtems-ci-qmp.XXXXXX)
+  QMP_ARGS="-S -qmp unix:$QMP_SOCK,server,nowait"
+fi
+
 # shellcheck disable=SC2086
-"$QEMU" -M esp32c3 -display none -monitor none -no-reboot $ICOUNT_ARGS $DATA_ARGS \
+"$QEMU" -M esp32c3 -display none -monitor none -no-reboot $ICOUNT_ARGS $DATA_ARGS $QMP_ARGS \
   -serial file:"$log" \
   -drive file="$flash",if=mtd,format=raw \
   ${EXTRA[@]+"${EXTRA[@]}"} \
   > "$OUT/qemu.out" 2> "$OUT/qemu.err" &
 qpid=$!
+
+if [ -n "$QMP_FILE" ]; then
+  if ! python3 "$(dirname "$0")/qmp-preboot.py" "$QMP_SOCK" "$QMP_FILE" \
+       > "$OUT/qmp.log" 2>&1; then
+    echo "error: QMP setup failed, see $OUT/qmp.log" >&2
+    sed -n '1,20p' "$OUT/qmp.log" >&2
+    kill "$qpid" 2>/dev/null
+    rm -f "$QMP_SOCK" "$flash"
+    exit 1
+  fi
+  rm -f "$QMP_SOCK"
+fi
 
 verdict=TIMEOUT
 for _ in $(seq 1 $((TMO * 2))); do

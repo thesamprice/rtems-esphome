@@ -1,0 +1,10 @@
+# Give the modelled TMP105 a temperature the lane can check against.
+#
+# 25000 is millidegrees, so 25.0 C, which is 400 counts of the device's
+# 0.0625 C resolution -- a whole number of counts, so the expected value is
+# exact and the lane can compare without a tolerance.
+#
+# This cannot be done with -device tmp105,temperature=25000: the property is
+# registered in instance_init and applied, and then realize() calls
+# tmp105_reset() which sets temperature back to 0.
+{"execute":"qom-set","arguments":{"path":"/machine/peripheral/temp0","property":"temperature","value":25000}}

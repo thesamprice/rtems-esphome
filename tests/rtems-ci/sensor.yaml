@@ -1,0 +1,65 @@
+# A real ESPHome sensor component, unmodified, reading a modelled I2C device.
+#
+# The other lanes prove the platform's own pieces: i2c.yaml drives the bus
+# through ESPHome's I2CBus directly, gpio.yaml drives pads.  This one proves
+# something different and, for the goal of this project, more important --
+# that an ESPHome *component* written for no platform in particular works on
+# RTEMS with nothing added for it.  `tmp102` is upstream ESPHome and there is
+# no RTEMS-specific code in it.
+#
+# QEMU supplies the slave at a temperature we choose:
+#
+#     -device tmp105,address=0x48,temperature=25000
+#
+# The property is in millidegrees, so 25000 is 25.0 C.  Choosing it is what
+# makes this a test rather than a demonstration: the reading has an expected
+# value, and tools/rtems-ci-run.sh is given a marker that only appears when
+# the two agree.  Run it with a different temperature and the lane fails,
+# which is the check that it is reading the device rather than a constant.
+#
+# TMP105 and TMP102 are the same TI family: pointer register, temperature at
+# 0x00, 12 bits left justified in a big-endian pair.  tmp102.cpp reads two
+# bytes, shifts right by four and scales by 0.0625, which is that format.
+
+esphome:
+  name: sensortest
+  on_boot:
+    priority: -100
+    then:
+      - logger.log:
+          level: INFO
+          format: "CI-MARKER boot ok"
+
+rtems:
+  bsp: riscv/esp32c3db
+
+logger:
+  level: DEBUG
+
+i2c:
+  id: bus
+  device: /dev/i2c-0
+  frequency: 100kHz
+  scan: true
+
+sensor:
+  - platform: tmp102
+    id: chip_temp
+    name: "Chip temperature"
+    update_interval: 1s
+    on_value:
+      # 0.0625 C per count, so an exact comparison is safe for a value that
+      # is a whole number of counts -- 25.0 C is 400 counts.  A tolerance
+      # would hide a wrong shift, which is the mistake this format invites.
+      - if:
+          condition:
+            lambda: 'return id(chip_temp).state == 25.0f;'
+          then:
+            - logger.log:
+                level: INFO
+                format: "CI-MARKER sensor ok"
+          else:
+            - logger.log:
+                level: ERROR
+                format: "sensor read %.4f C, expected 25.0"
+                args: [ 'id(chip_temp).state' ]

@@ -149,6 +149,16 @@ jobs:
             -M "CI-MARKER i2c ok" tests/rtems-ci/.esphome/build/i2ctest/i2ctest.bin \
             -- -device tmp105,address=0x48
 
+      # An upstream ESPHome component, unmodified, against a modelled device.
+      # The other lanes prove this platform's own pieces; this one proves a
+      # component that knows nothing about RTEMS works on it.
+      - name: Run the sensor lane
+        run: |
+          tools/rtems-ci-run.sh -o rtems-results/sensor -t 120 \
+            -M "CI-MARKER sensor ok" -Q tests/rtems-ci/sensor-25c.qmp \
+            tests/rtems-ci/.esphome/build/sensortest/sensortest.bin \
+            -- -device tmp105,address=0x48,id=temp0
+
       # The far end of UART1 echoes upper-cased, so a port that loops TX back to
       # RX internally -- a real fault -- cannot pass by returning the guest its
       # own bytes.

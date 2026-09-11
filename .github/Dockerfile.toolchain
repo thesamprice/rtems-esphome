@@ -41,12 +41,21 @@ RUN scripts/apply_patches.sh rtems rsb && scripts/apply_patches.sh -c rtems rsb
 # prints only "Build FAILED" on the console, so a failure here is undiagnosable
 # from the workflow log alone -- which cost two 70-minute runs guessing at a
 # sis(1) failure.  Dump the report before giving up.
+# --bset-tar-file makes the RSB write the whole installed prefix as a tarball
+# alongside installing it.  That tarball is the point: it is the expensive
+# thing this image exists to produce, and keeping it means a toolchain can be
+# installed somewhere that is not this image -- another CI setup, a developer's
+# machine, a BSP build -- without an hour of RSB.
+#
+# Kept at a fixed path because everything under /src is removed below.
 RUN cd src/rsb/rtems \
-    && ( ../source-builder/sb-set-builder --prefix=/opt/rtems/7 7/rtems-riscv \
+    && ( ../source-builder/sb-set-builder --prefix=/opt/rtems/7 \
+             --bset-tar-file 7/rtems-riscv \
          || ( echo "=== RSB error report ==="; \
               tail -n 200 rsb-report-*.txt 2>/dev/null; \
               false ) ) \
-    && rm -rf /src/src/rsb/rtems/build /root/.cache
+    && cp tar/7/rtems-riscv.tar.bz2 /opt/rtems-toolchain-riscv.tar.bz2 \
+    && rm -rf /src/src/rsb/rtems/build /src/src/rsb/rtems/tar /root/.cache
 
 # Install, not just build.  The .pc file the ESPHome build backend reads is
 # produced by install; a built-but-not-installed BSP fails with "no pkg-config

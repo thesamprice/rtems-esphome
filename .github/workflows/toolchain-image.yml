@@ -18,7 +18,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      # contents: write, because the toolchain tarball is published as a
+      # release asset -- see the "Publish" step.
+      contents: write
       packages: write
     steps:
       - uses: actions/checkout@v4
@@ -41,3 +43,55 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/rtems-esphome-toolchain:latest
             ghcr.io/${{ github.repository_owner }}/rtems-esphome-toolchain:${{ github.sha }}
+
+      # The image is one way to consume the toolchain and not the only one
+      # worth having.  Publish the installed prefix as a tarball too, so it can
+      # go on a developer's machine, into a BSP build, or into CI that is not
+      # using this image -- none of which should need an hour of RSB.
+      #
+      # Identity is what makes it reusable: the toolchain is decided by the RSB
+      # pin and by patches/rsb, which now changes the build set itself, so the
+      # name carries both.  Two tarballs with the same name are the same
+      # toolchain.
+      - name: Name the toolchain package
+        id: pkg
+        run: |
+          rsb=$(git -C src/rsb rev-parse --short=12 HEAD)
+          patches=$(git hash-object patches/rsb/*.patch 2>/dev/null | sha256sum | cut -c1-8)
+          echo "name=rtems-7-riscv-${rsb}-p${patches}-x86_64-linux-gnu.tar.bz2" >> "$GITHUB_OUTPUT"
+          echo "tag=toolchain-${rsb}-p${patches}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract the toolchain tarball from the image
+        run: |
+          img=ghcr.io/${{ github.repository_owner }}/rtems-esphome-toolchain:${{ github.sha }}
+          cid=$(docker create "$img")
+          docker cp "$cid:/opt/rtems-toolchain-riscv.tar.bz2" "${{ steps.pkg.outputs.name }}"
+          docker rm "$cid" >/dev/null
+          ls -l "${{ steps.pkg.outputs.name }}"
+
+      # Idempotent: the same RSB pin and patch set publish to the same tag, and
+      # re-running replaces the asset rather than accumulating copies.
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=${{ steps.pkg.outputs.tag }}
+          name=${{ steps.pkg.outputs.name }}
+          # Heredoc rather than an inline --notes: the notes are multi-line and
+          # embedding them in the YAML directly is how this step first broke.
+          cat > notes.md <<NOTES
+          Built by .github/Dockerfile.toolchain from the RSB pin this tag names.
+
+          The prefix is baked into the compiler, so install it where it was
+          built for:
+
+              sudo tar -xjf $name -C /
+
+          which gives /opt/rtems/7.
+
+          Built on ubuntu-24.04 for x86_64-linux-gnu. It needs a compatible
+          glibc and it is not relocatable.
+          NOTES
+          gh release view "$tag" >/dev/null 2>&1 \
+            || gh release create "$tag" --title "RTEMS 7 riscv toolchain ($tag)" --notes-file notes.md
+          gh release upload "$tag" "${{ steps.pkg.outputs.name }}" --clobber

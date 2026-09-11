@@ -58,6 +58,7 @@ reference node would turn the A/B into a comparison of something else.
 | `zynq-dns.yaml` | names resolve asynchronously without stalling the main loop |
 | `zynq-prefs.yaml` | preferences reach a file, come back off it, and a damaged one is refused |
 | `zynq-threads.yaml` | the core helpers are correct when a second RTEMS task uses them |
+| `zynq-mdns.yaml` | the node advertises itself, and the stack survives advertising |
 
 ### `gpio.yaml`
 
@@ -421,6 +422,50 @@ Stubbing `wake_loop_threadsafe()` to do nothing moves the second number to
 RTEMS binary semaphores under priority inheritance permit nested access.
 FreeRTOS's do not. See #71 — a same-task contention check would have proved
 nothing, which is how that was found.
+
+### `zynq-mdns.yaml`
+
+Discovery: is the node advertised over mDNS, and is the network stack still
+alive afterwards.
+
+```sh
+../esp-idf-ci/venv/bin/esphome compile zynq-mdns.yaml
+ZYNQ_CAPTURE=$PWD/out/capture.pcap ../../tools/zynq-lwip-run.sh -D -p 6053 \
+    -c "$PWD/../esp-idf-ci/venv/bin/python $PWD/mdns_client.py" \
+    -o out .esphome/build/mdnszynq/mdnszynq.elf
+```
+
+**The verdict is read from a capture of the netdev**, not from the guest, which
+is what `-D` is for. Nothing the guest can print establishes that a packet
+reached the wire — and the interesting failures here are all failures to
+transmit.
+
+```
+ok   the API port still answers after advertising
+     3 probe(s), 2 announcement(s)
+ok   it probed before claiming the name
+ok   it announced
+ok   the announcement names the esphome service
+ok   and carries the configuration's TXT records
+```
+
+**The API check is not padding.** Advertising happens on lwIP's thread, and a
+fault there does not merely lose the announcement — it kills the thread and
+every protocol goes quiet at once. That is exactly how this failed before #78,
+and from outside it looked like an mDNS problem rather than a dead stack. A
+lane that only counted mDNS packets would have reported the same "no
+announcement" for a node that was fine and for one that was dead.
+
+Counts are `>=`, not `==`: a retransmission is legal and is not a regression.
+
+**What this lane does not check** is the pace. The announcements are about five
+times faster than RFC 6762 intends, because guest time under this QEMU machine
+runs 5.6–6.9x fast (#77). The sequence is correct; the rate is a property of the
+emulation, so asserting on it would be asserting on the host's speed.
+
+Five defects across three layers had to be fixed before this passed — #64 and
+#74 in the Xilinx driver, #75 in lwIP's responder and its timeout pool, #78 in
+this platform's `mdns` implementation. The lane exists so they stay fixed.
 
 ## What a pass means
 

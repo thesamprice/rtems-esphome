@@ -109,6 +109,9 @@ jobs:
           ../../.venv/bin/esphome compile reference-node.yaml
           ../../.venv/bin/esphome compile primitives.yaml
           ../../.venv/bin/esphome compile scheduler.yaml
+          ../../.venv/bin/esphome compile gpio.yaml
+          ../../.venv/bin/esphome compile i2c.yaml
+          ../../.venv/bin/esphome compile uart.yaml
       - name: Run the reference node
         run: |
           tools/rtems-ci-run.sh -o rtems-results/reference \
@@ -130,6 +133,38 @@ jobs:
             -M "SCHEDULER ok" tests/rtems-ci/.esphome/build/scheduler/scheduler.bin
           tools/rtems-ci-run.sh -o rtems-results/scheduler-realtime -t 240 -I \
             -M "SCHEDULER ok" tests/rtems-ci/.esphome/build/scheduler/scheduler.bin
+      # The driver lanes.  These need the QEMU models in the pinned esp-qemu --
+      # the GPIO model and the I2C controller -- which the image already has,
+      # so they cost a compile and a few seconds of emulation each.
+      - name: Run the GPIO lane
+        run: |
+          tools/rtems-ci-run.sh -o rtems-results/gpio -t 120 \
+            -M "CI-MARKER gpio ok" tests/rtems-ci/.esphome/build/gpio/gpio.bin
+
+      # A real device on the bus, so that "the bus works" is answered by
+      # something answering rather than by the driver not complaining.
+      - name: Run the I2C lane
+        run: |
+          tools/rtems-ci-run.sh -o rtems-results/i2c -t 120 \
+            -M "CI-MARKER i2c ok" tests/rtems-ci/.esphome/build/i2ctest/i2ctest.bin \
+            -- -device tmp105,address=0x48
+
+      # The far end of UART1 echoes upper-cased, so a port that loops TX back to
+      # RX internally -- a real fault -- cannot pass by returning the guest its
+      # own bytes.
+      - name: Run the UART lane
+        run: |
+          rm -f /tmp/uart1.sock
+          python3 tests/rtems-ci/uart_echo.py /tmp/uart1.sock &
+          echo_pid=$!
+          for _ in $(seq 1 50); do [ -S /tmp/uart1.sock ] && break; sleep 0.1; done
+          tools/rtems-ci-run.sh -o rtems-results/uart -t 120 \
+            -M "CI-MARKER uart ok" tests/rtems-ci/.esphome/build/uarttest/uarttest.bin \
+            -- -serial unix:/tmp/uart1.sock
+          rc=$?
+          kill "$echo_pid" 2>/dev/null || true
+          exit $rc
+
       - if: always()
         uses: actions/upload-artifact@v4
         with:

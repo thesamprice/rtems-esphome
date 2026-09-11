@@ -15,7 +15,7 @@ with before an RTEMS image runs at all.
 | core-blocker | 123 | **must be addressed to boot** — core, not behind a seam |
 | seam | 4 | dispatch or interface declaration, not implementation |
 | platform-backend | 319 | a platform doing its job; an RTEMS port adds a sibling |
-| component-local | 9572 | decides which components an RTEMS build can offer |
+| component-local | 9582 | decides which components an RTEMS build can offer |
 | python | 90 | build-time validation and code generation |
 
 ## The core blockers, by file
@@ -50,8 +50,8 @@ fast path with an obvious replacement — but it is not optional.
 | family | core-blocker | seam | platform-backend | component-local | python |
 |---|---:|---:|---:|---:|---:|
 | freertos | 44 | 0 | 25 | 301 | 2 |
-| lwip | 4 | 2 | 10 | 149 | 9 |
-| esp-idf | 70 | 0 | 262 | 8832 | 64 |
+| lwip | 4 | 2 | 10 | 154 | 9 |
+| esp-idf | 70 | 0 | 262 | 8837 | 64 |
 | arduino | 5 | 2 | 22 | 290 | 15 |
 
 ## Components with the most platform coupling

@@ -1,6 +1,6 @@
 {
   "tree": "src/esphome",
-  "revision": "3632b1f657d9c103efc323aceee3c0bddcec1ba4",
+  "revision": "963c0268daaa15519a1f9254069ffc55ae277f33",
   "rules": [
     {
       "family": "freertos",
@@ -179,7 +179,7 @@
     }
   ],
   "totals": {
-    "component-local": 9572,
+    "component-local": 9582,
     "core-blocker": 123,
     "platform-backend": 319,
     "python": 90,
@@ -39412,15 +39412,95 @@
     },
     {
       "file": "esphome/components/mdns/mdns_rtems.cpp",
-      "line": 42,
-      "family": "esp-idf",
-      "rule": "log",
+      "line": 22,
+      "family": "lwip",
+      "rule": "include",
       "bucket": "component-local",
-      "text": "ESP_LOGW(TAG, \"mDNS is not implemented on RTEMS; this node will not be discoverable\");"
+      "text": "#include <lwip/apps/mdns.h>"
     },
     {
       "file": "esphome/components/mdns/mdns_rtems.cpp",
-      "line": 43,
+      "line": 23,
+      "family": "lwip",
+      "rule": "include",
+      "bucket": "component-local",
+      "text": "#include <lwip/netif.h>"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 24,
+      "family": "lwip",
+      "rule": "include",
+      "bucket": "component-local",
+      "text": "#include <lwip/tcpip.h>"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 58,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGW(TAG, \"Could not add TXT record %s: %d\", item.c_str(), (int) err);"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 74,
+      "family": "lwip",
+      "rule": "netif",
+      "bucket": "component-local",
+      "text": "struct netif *netif = netif_default;"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 76,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGW(TAG, \"No network interface is up; this node will not be discoverable\");"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 89,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGE(TAG, \"Cannot advertise on this interface: %d\", (int) err);"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 129,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGW(TAG, \"Could not advertise %s.%s: %d\", service_type, proto_str, (int) slot);"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 134,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGD(TAG, \"Advertising %s with %u service(s)\", hostname, (unsigned) services.size());"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 140,
+      "family": "lwip",
+      "rule": "netif",
+      "bucket": "component-local",
+      "text": "struct netif *netif = netif_default;"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 169,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGW(TAG, \"This lwIP was built without LWIP_MDNS_RESPONDER; this node will not be discoverable\");"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 170,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",

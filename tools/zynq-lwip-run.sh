@@ -12,6 +12,9 @@
 #   -p PORT   host port to forward (default: 5555)
 #   -M TEXT   the marker that means success (default: "CI-MARKER net ok")
 #   -n        do not connect from the host: for a test that does not listen
+#   -D        capture the netdev to <out>/capture.pcap.  Some claims can only
+#             be made from outside the guest -- that a packet reached the wire,
+#             or that one did not -- and the guest's own log cannot make them.
 #   -c SCRIPT run this host-side script instead of the built-in exchange.  It
 #             is given the forwarded port as its only argument and its exit
 #             status decides the verdict, which is how a lane that speaks a
@@ -43,8 +46,9 @@ PORT=5555
 MARKER="CI-MARKER net ok"
 CONNECT=1
 CLIENT=""
+CAPTURE=0
 
-while getopts "q:o:t:p:M:nc:" opt; do
+while getopts "q:o:t:p:M:nc:D" opt; do
   case $opt in
     q) QEMU=$OPTARG;;
     o) OUT=$OPTARG;;
@@ -53,6 +57,7 @@ while getopts "q:o:t:p:M:nc:" opt; do
     M) MARKER=$OPTARG;;
     n) CONNECT=0;;
     c) CLIENT=$OPTARG;;
+    D) CAPTURE=1;;
     *) exit 2;;
   esac
 done
@@ -72,9 +77,18 @@ rm -f "$log"
 # The machine already has two Cadence GEMs, so the netdev attaches to the first
 # rather than being plugged in: "-device cadence_gem" is refused as not
 # pluggable.  The second GEM having no peer is expected and QEMU says so.
+# filter-dump attaches to the hub port the legacy -net form creates.  Off
+# unless asked for: it writes every frame, which is a lot of disk for a lane
+# that only needs a verdict.
+DUMP_ARGS=""
+if [ "$CAPTURE" = 1 ]; then
+  DUMP_ARGS="-object filter-dump,id=netdump,netdev=hub0port0,file=$OUT/capture.pcap"
+fi
+
 "$QEMU" -no-reboot -display none -monitor none -M xilinx-zynq-a9 -m 256M \
   -serial null -serial file:"$log" \
   -net nic -net user,hostfwd=tcp:127.0.0.1:"$PORT"-10.0.2.15:"$PORT" \
+  $DUMP_ARGS \
   -kernel "$IMAGE" > "$OUT/qemu.out" 2> "$OUT/qemu.err" &
 qpid=$!
 

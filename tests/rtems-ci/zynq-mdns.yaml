@@ -1,0 +1,29 @@
+# mDNS discovery: is the node advertised, and does the stack survive it?
+#
+# Both halves matter and they fail together.  Advertising runs on lwIP's thread
+# at announce time, and a fault there does not just lose the announcement -- it
+# takes the whole stack down, so the node goes quiet on every protocol at once.
+# That is how this failed before #78, and it is why the client below checks the
+# API port as well as the capture.
+#
+# The verdict is host-side on purpose.  Nothing the guest can print says a
+# packet reached the wire.
+
+esphome:
+  name: mdnszynq
+
+rtems:
+  bsp: arm/xilinx_zynq_a9_qemu
+  network:
+    address: 10.0.2.15
+    subnet: 255.255.255.0
+    gateway: 10.0.2.2
+
+logger:
+  level: DEBUG
+
+network:
+
+api:
+
+mdns:

@@ -57,6 +57,7 @@ reference node would turn the A/B into a comparison of something else.
 | `zynq-api.yaml` | **a Home Assistant client talks to the node over the native API** |
 | `zynq-dns.yaml` | names resolve asynchronously without stalling the main loop |
 | `zynq-prefs.yaml` | preferences reach a file, come back off it, and a damaged one is refused |
+| `zynq-threads.yaml` | the core helpers are correct when a second RTEMS task uses them |
 
 ### `gpio.yaml`
 
@@ -362,6 +363,64 @@ existing destination. `_rename_r()` evaluates the new path with
 `RTEMS_FS_EXCLUSIVE` and fails with `EEXIST` whatever the filesystem
 underneath, so the write-beside-and-rename that would make a replacement atomic
 has to unlink first.
+
+### `zynq-threads.yaml`
+
+Cross-task use of ESPHome's core task and queue helpers (#34).
+
+```sh
+../esp-idf-ci/venv/bin/esphome compile zynq-threads.yaml
+../../tools/zynq-lwip-run.sh -n -M "CI-MARKER threads ok" \
+    .esphome/build/thrzynq/thrzynq.elf
+```
+
+#34 was opened against an audit that counted 27 core blockers across six
+task/queue files. Most of them are answered by the thread model rather than by
+porting: this platform selects `ESPHOME_THREAD_MULTI_ATOMICS`, under which
+`freertos_queue.h`, `static_task.*` and `main_task.*` compile out entirely.
+What that leaves is the part an audit cannot see — this port really does have
+other tasks, since lwIP runs its own — so the helpers that *do* compile have to
+be right when a second task uses them. Every check here runs against a real
+second RTEMS task.
+
+**Two tasks from one entry point with different arguments** is the concrete
+form of the gap that made NASA OSAL unsuitable: `rtems_task_start()` takes a
+per-task argument, so the classic API is already the helper and no
+task-creation shim is needed.
+
+**The queue** is checked twice. Once deterministically with no second task, for
+the capacity claim — a ring of 4 holds 3, because full is `tail+1 == head` and
+that is how it tells full from empty — and once with a producer task pushing
+200 items through a ring of 8:
+
+```
+pushes refused while the ring was full: 28
+the ring really filled during the run              ok
+```
+
+The refusal count is the evidence, not decoration. Without it the test passes
+on a consumer that simply kept up, never crossing the full path at all.
+
+**The wake is the interesting one.** ESPHome's contract under `MULTI_ATOMICS`
+is that the scheduler is safe to call from any thread but does *not* wake the
+loop by itself — a background producer calls `App.wake_loop_threadsafe()`. Both
+halves fail silently: an unsafe scheduler corrupts rarely, and a missing wake
+only ever shows up as latency. So the lane defers the same work twice:
+
+```
+deferred without a wake: 59646us
+deferred with a wake:    448us
+ratio: 133x
+```
+
+Stubbing `wake_loop_threadsafe()` to do nothing moves the second number to
+19636us and fails both wake checks, which is what makes the 133x mean something.
+
+**One divergence is recorded rather than asserted:** `try_lock()` fails while
+*another* task holds the mutex, and succeeds from the owning task, because
+RTEMS binary semaphores under priority inheritance permit nested access.
+FreeRTOS's do not. See #71 — a same-task contention check would have proved
+nothing, which is how that was found.
 
 ## What a pass means
 

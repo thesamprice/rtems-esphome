@@ -1,0 +1,27 @@
+# Cross-task use of ESPHome's core helpers (#34).
+#
+# The audit that opened #34 counted 27 core blockers in six task/queue files.
+# Under ESPHOME_THREAD_MULTI_ATOMICS, which this platform selects, four of those
+# files compile out entirely -- so what needs proving is not that they were
+# ported but that the ones which remain are correct when a second RTEMS task
+# uses them. This port really does have other tasks: lwIP runs its own.
+
+esphome:
+  name: thrzynq
+  includes:
+    - zynq_threads_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_threads::start();"
+
+rtems:
+  bsp: arm/xilinx_zynq_a9_qemu
+
+logger:
+  level: INFO
+
+interval:
+  - interval: 100ms
+    then:
+      - lambda: "rtems_threads::poll();"

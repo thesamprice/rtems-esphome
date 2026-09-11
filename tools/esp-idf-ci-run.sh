@@ -96,14 +96,27 @@ for cand in "$BUILD/flasher_args.json" "$BUILD/../flasher_args.json"; do
   [ -f "$cand" ] && { args_json=$cand; break; }
 done
 
-dd if=/dev/zero of="$flash" bs=1m count=$((FLASH_SIZE / 1024 / 1024)) 2>/dev/null
+# bs takes a plain byte count, not "1m".  That suffix is BSD's; GNU dd spells
+# it "1M" and rejects the lowercase form, so this worked on a developer's Mac
+# and produced a zero-length image in CI -- where QEMU then refused the drive
+# and the harness reported a timeout, because nothing checked that the image
+# had been built.
+if ! dd if=/dev/zero of="$flash" bs=1048576 count=$((FLASH_SIZE / 1048576)) 2>"$OUT/dd.err"; then
+  echo "error: could not create the $((FLASH_SIZE / 1048576))MB flash image" >&2
+  cat "$OUT/dd.err" >&2
+  exit 2
+fi
+rm -f "$OUT/dd.err"
 
 place() {
   # place <offset-hex-or-dec> <file>
   local off=$1 file=$2
   [ -f "$file" ] || { echo "error: missing $file" >&2; return 1; }
   local dec=$(( off ))
-  dd if="$file" of="$flash" bs=1 seek="$dec" conv=notrunc 2>/dev/null
+  if ! dd if="$file" of="$flash" bs=1 seek="$dec" conv=notrunc 2>/dev/null; then
+    echo "error: could not place $file at $dec in the flash image" >&2
+    return 1
+  fi
   printf '  %-14s %#010x  %s\n' "$(basename "$file")" "$dec" "$(wc -c < "$file" | tr -d ' ') bytes"
 }
 
@@ -127,6 +140,17 @@ else
   place 0x0     "$BUILD/bootloader.bin" || exit 2
   place 0x8000  "$BUILD/partitions.bin" || exit 2
   place 0x10000 "$BUILD/firmware.bin"   || exit 2
+fi
+
+# Check the image before handing it to QEMU.  QEMU accepts only 2, 4, 8 and
+# 16MB flash images and refuses anything else with a drive error -- which the
+# run loop below cannot distinguish from a firmware that never booted, so it
+# reports a timeout and the real cause goes in qemu.err where nobody looks.
+# This lane has already lost a CI run to exactly that.
+actual=$(wc -c < "$flash" | tr -d ' ')
+if [ "$actual" != "$FLASH_SIZE" ]; then
+  echo "error: flash image is $actual bytes, expected $FLASH_SIZE" >&2
+  exit 2
 fi
 
 # ---------------------------------------------------------------- run

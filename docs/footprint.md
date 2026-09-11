@@ -29,14 +29,28 @@ Part has 1 MiB of mapped code flash and 320 KiB of SRAM. Flash is the cheap
 resource here and RAM is the constraint, which is the trade the
 `ESPHOME_THREAD_MULTI_ATOMICS` decision rested on.
 
-| image | flash KiB | of which code | RAM (application) KiB |
-|---|---:|---:|---:|
-| `scheduler` | 302.5 | 269.1 | 30.8 |
-| `primitives` | 304.8 | 270.5 | 30.7 |
-| `reference-node` | 311.4 | 275.9 | 31.0 |
-| `gpio` | 316.9 | 280.3 | 31.4 |
-| `i2ctest` | 320.2 | 281.3 | 30.8 |
-| `uarttest` | 324.7 | 285.5 | 31.1 |
+| image | flash KiB | of which code | RAM (application) KiB | since 803b46c |
+|---|---:|---:|---:|---:|
+| `scheduler` | 319.6 | 283.7 | 30.8 | +17.1 |
+| `primitives` | 321.7 | 284.9 | 30.7 | +16.9 |
+| `reference-node` | 329.5 | 291.4 | 31.0 | +18.1 |
+| `gpio` | 334.0 | 294.9 | 31.4 | +17.1 |
+| `i2ctest` | 330.3 | 292.2 | 30.8 | +10.1 |
+| `uarttest` | 335.1 | 296.6 | 31.1 | +10.4 |
+
+Re-measured 2026-09-11 against esphome `7e96d19`, RTEMS pin `b03d4c0119` with
+`patches/rtems/` applied, `riscv-rtems7-gcc 15.2.0` (RSB `105f43d299`).
+
+**The growth is features, not bloat.** The first baseline was taken 29 esphome
+commits earlier, before file-backed preferences, the network interface, lwIP
+address types, the mDNS responder, the GPIO, I2C and UART backends, the 1 kHz
+clock and third-party library support. +13.6 KiB of flash on average for that
+list is cheap, and RAM did not move at all — every image still asks for ~31 KiB
+and still leaves ~289 KiB.
+
+RAM staying flat across all six is the number worth watching, because RAM is
+the constraint on this part and flash is not: these images use a third of the
+1 MiB mapped code window.
 
 `.work` takes the remaining ~289 KiB of SRAM in every one of these.
 

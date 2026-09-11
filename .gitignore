@@ -6,3 +6,4 @@ tests/esp-idf-ci/venv/
 esp-idf-ci-results.*
 tests/rtems-ci/.esphome/
 rtems-ci-results.*
+.venv/

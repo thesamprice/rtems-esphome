@@ -158,6 +158,20 @@ inline void test_mutex() {
   }
   check(!g_helper_holds, "helper released the mutex");
   check(m.try_lock(), "try_lock succeeds again after release");
+
+  // Recursion.  RTEMS lets the owner re-take a binary semaphore under priority
+  // inheritance; the FreeRTOS mutex ESP32 and LibreTiny use does not, so this
+  // is a real platform divergence rather than a contract.
+  //
+  // The point of the check is not that it succeeds -- it always did -- but that
+  // USE_RTEMS_MUTEX_RECURSION_CHECK notices and says so.  A diagnostic printed
+  // where nobody reads it is the failure mode worth ruling out, so the harness
+  // greps the console for the message rather than this asserting on it: see
+  // "CI-MARKER recursion reported" in the lane.  m is held here, from the
+  // try_lock above.
+  ESP_LOGI(TAG, "  re-taking from the owning task, expect a report below:");
+  m.lock();
+  m.unlock();
   m.unlock();
 }
 

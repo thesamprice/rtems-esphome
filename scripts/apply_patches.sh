@@ -4,6 +4,13 @@
 #
 # Layout:  patches/<module>/*.patch  applies to  src/<module>
 #
+# Order is the shell's glob order, which is lexical, so patches are numbered.
+# It matters: 0006 modifies files that 0003, 0004 and 0005 create, and before
+# the numbering existed it sorted between 0004 and 0005 and could not apply.
+# A new patch that builds on an existing one gets a higher number; one that
+# stands alone can go anywhere, and gets the next number for the sake of a
+# reader who should not have to work out which is which.
+#
 # The patches carry fixes that are not upstream yet.  Keeping them as files
 # rather than as commits in the submodules means the submodule pins stay on
 # upstream commits, and "git status" in the submodule shows exactly the local

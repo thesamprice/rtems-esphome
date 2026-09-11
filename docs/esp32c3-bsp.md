@@ -307,6 +307,49 @@ hardest.
 configured for a small part. The whole suite links: 632 executables, no
 overflow.
 
+## Which pads are free, and who arbitrates them
+
+Three drivers in this BSP point a pad at their peripheral, and none of them
+can see what the others took:
+
+| pins | taken by |
+|---|---|
+| 2, 8, 9 | strapping |
+| 5, 6 | I2C — SDA and SCL |
+| 7, 10 | UART1 — TX and RX |
+| 12–17 | SPI flash on every module |
+| 18, 19 | USB D− / D+ |
+| 20, 21 | UART0, which is the console |
+
+Leaving **0, 1, 3, 4, 11** for an application.
+
+That table has been wrong once already, which is the point of this section.
+It previously listed 7 and 10 as free, because it was written before the UART
+driver existed and nothing failed when UART1 took them.
+
+`<bsp/pin.h>` is what stops the next one. `bsp_pin_claim(pin, owner)` records
+a pad's owner and refuses a second claimant, and all three drivers call it
+before touching IO_MUX. A refusal names the holder:
+
+```
+esp32c3 gpio: GPIO5 belongs to esp32c3 i2c
+```
+
+It is a 22 bit mask and one pointer per pad, deliberately not
+`rtems_gpio_request_pin()`: that lives in `gpio-support.c`, a little over
+2000 lines with a mutex per bank and an optional interrupt server task, and
+linking it into every application that merely has an I2C bus is a poor trade
+on a part with 320 KiB of RAM.
+
+One asymmetry worth knowing. A GPIO claim is never released, because
+`rtems_gpio_release_pin()` keeps its bookkeeping in the shared layer and
+there is no `rtems_gpio_bsp_release()` for it to call. Re-requesting the pad
+as GPIO works — a re-claim by the same owner succeeds — but I2C or UART1
+taking a pad GPIO used earlier and has since released is refused. That is a
+false refusal, and it is the safe direction to be wrong in.
+
+`tests/bsp-pin/run.sh` builds and runs the test for this.
+
 ## Test results
 
 459 tests, the whole suite less the performance families the runner defers by

@@ -1,0 +1,89 @@
+From f82f001e034c4f5e3f7ce5cea6607c7fd3e867b1 Mon Sep 17 00:00:00 2001
+From: Samuel Price <thesamprice@gmail.com>
+Date: Fri, 11 Sep 2026 15:09:25 -0400
+Subject: [PATCH] mdns: fix probing on single-stack netifs in dual-stack builds
+
+When LWIP_IPV4 and LWIP_IPV6 are both enabled,
+mdns_probe_and_announce() only counts a probe when sending on both
+address families succeeds.
+
+This causes probing to never complete when a netif has an address for
+only one family.  For an IPv4-only netif, the IPv6 probe is attempted
+despite there being no valid IPv6 address, and its failure prevents
+sent_num from advancing.  Conversely, an IPv6-only netif does not reach
+the IPv6 probe at all, because the IPv4 condition guards the enclosing
+block.
+
+Only attempt a probe for an address family when the netif has a valid
+address for that family.  Count the probe when all applicable sends
+succeed and at least one address family was probed.
+
+The IPv6 availability test uses
+ip6_addr_isvalid(netif_ip6_addr_state(netif, i)), which is what this
+module already uses when deciding which IPv6 addresses produce records.
+
+Observed on an IPv4-only netif with LWIP_IPV4=1 and LWIP_IPV6=1: without
+this change, 299 probe packets were captured in 12.6 seconds with no
+announcement.  With this change the responder sends three probes
+followed by two announcements and completes, as RFC 6762 sections 8.1
+and 8.3 describe.
+---
+ src/apps/mdns/mdns.c | 37 ++++++++++++++++++++++++++++---------
+ 1 file changed, 28 insertions(+), 9 deletions(-)
+
+diff --git a/src/apps/mdns/mdns.c b/src/apps/mdns/mdns.c
+index b3ca2f3..ef43846 100644
+--- a/src/apps/mdns/mdns.c
++++ b/src/apps/mdns/mdns.c
+@@ -2298,20 +2298,39 @@ mdns_probe_and_announce(void* arg)
+     case MDNS_STATE_OFF:
+     case MDNS_STATE_PROBE_WAIT:
+     case MDNS_STATE_PROBING:
++    {
++      int probe_ok = 1;
++      int probe_sent = 0;
++
+ #if LWIP_IPV4
+-      /*if ipv4 wait with probing until address is set*/
+-      if (!ip4_addr_isany_val(*netif_ip4_addr(netif)) &&
+-          mdns_send_probe(netif, &v4group) == ERR_OK)
++      if (!ip4_addr_isany_val(*netif_ip4_addr(netif))) {
++        probe_sent = 1;
++        if (mdns_send_probe(netif, &v4group) != ERR_OK) {
++          probe_ok = 0;
++        }
++      }
+ #endif
+-      {
++
+ #if LWIP_IPV6
+-        if (mdns_send_probe(netif, &v6group) == ERR_OK)
+-#endif
+-        {
+-          mdns->state = MDNS_STATE_PROBING;
+-          mdns->sent_num++;
++      {
++        int i;
++        for (i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
++          if (ip6_addr_isvalid(netif_ip6_addr_state(netif, i))) {
++            probe_sent = 1;
++            if (mdns_send_probe(netif, &v6group) != ERR_OK) {
++              probe_ok = 0;
++            }
++            break;
++          }
+         }
+       }
++#endif
++
++      if (probe_sent && probe_ok) {
++        mdns->state = MDNS_STATE_PROBING;
++        mdns->sent_num++;
++      }
++    }
+ 
+       if (mdns->sent_num >= MDNS_PROBE_COUNT) {
+         mdns->state = MDNS_STATE_ANNOUNCE_WAIT;
+-- 
+2.39.5 (Apple Git-154)
+

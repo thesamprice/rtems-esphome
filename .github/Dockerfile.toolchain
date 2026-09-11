@@ -13,7 +13,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential git python3 python3-dev python3-venv python-is-python3 \
         texinfo unzip pax bison flex ninja-build pkg-config \
-        libncurses-dev zlib1g-dev libglib2.0-dev libgcrypt20-dev libslirp-dev \
+        libncurses-dev libreadline-dev zlib1g-dev libglib2.0-dev libgcrypt20-dev libslirp-dev \
         ca-certificates curl xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
@@ -37,8 +37,15 @@ ENV PATH=/opt/rtems/7/bin:$PATH
 # is belt and braces: it re-checks and fails if anything did not land.
 RUN scripts/apply_patches.sh rtems && scripts/apply_patches.sh -c rtems
 
+# The RSB writes the actual compiler or configure error into a report file and
+# prints only "Build FAILED" on the console, so a failure here is undiagnosable
+# from the workflow log alone -- which cost two 70-minute runs guessing at a
+# sis(1) failure.  Dump the report before giving up.
 RUN cd src/rsb/rtems \
-    && ../source-builder/sb-set-builder --prefix=/opt/rtems/7 7/rtems-riscv \
+    && ( ../source-builder/sb-set-builder --prefix=/opt/rtems/7 7/rtems-riscv \
+         || ( echo "=== RSB error report ==="; \
+              tail -n 200 rsb-report-*.txt 2>/dev/null; \
+              false ) ) \
     && rm -rf /src/src/rsb/rtems/build /root/.cache
 
 # Install, not just build.  The .pc file the ESPHome build backend reads is

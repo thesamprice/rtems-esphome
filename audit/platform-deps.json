@@ -1,6 +1,6 @@
 {
   "tree": "src/esphome",
-  "revision": "0128c72db48962da8fe971fce799d5f7648cb728",
+  "revision": "3632b1f657d9c103efc323aceee3c0bddcec1ba4",
   "rules": [
     {
       "family": "freertos",
@@ -179,10 +179,10 @@
     }
   ],
   "totals": {
-    "component-local": 9559,
+    "component-local": 9572,
     "core-blocker": 123,
-    "platform-backend": 284,
-    "python": 89,
+    "platform-backend": 319,
+    "python": 90,
     "seam": 4
   },
   "hits": [
@@ -2492,7 +2492,7 @@
     },
     {
       "file": "esphome/components/api/api_connection.cpp",
-      "line": 2094,
+      "line": 2104,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -2500,7 +2500,7 @@
     },
     {
       "file": "esphome/components/api/api_connection.cpp",
-      "line": 2166,
+      "line": 2176,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -2508,7 +2508,7 @@
     },
     {
       "file": "esphome/components/api/api_connection.cpp",
-      "line": 2172,
+      "line": 2182,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -2516,7 +2516,7 @@
     },
     {
       "file": "esphome/components/api/api_connection.cpp",
-      "line": 2182,
+      "line": 2192,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -2524,7 +2524,7 @@
     },
     {
       "file": "esphome/components/api/api_connection.cpp",
-      "line": 2185,
+      "line": 2195,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -2532,7 +2532,7 @@
     },
     {
       "file": "esphome/components/api/api_connection.cpp",
-      "line": 2189,
+      "line": 2199,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -2540,7 +2540,7 @@
     },
     {
       "file": "esphome/components/api/api_connection.cpp",
-      "line": 2191,
+      "line": 2201,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -2548,7 +2548,7 @@
     },
     {
       "file": "esphome/components/api/api_connection.cpp",
-      "line": 2198,
+      "line": 2208,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -2556,7 +2556,7 @@
     },
     {
       "file": "esphome/components/api/api_connection.cpp",
-      "line": 2399,
+      "line": 2409,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -2564,7 +2564,7 @@
     },
     {
       "file": "esphome/components/api/api_connection.cpp",
-      "line": 2672,
+      "line": 2682,
       "family": "esp-idf",
       "rule": "log",
       "bucket": "component-local",
@@ -31051,6 +31051,38 @@
       "text": "ESP_LOGE(TAG, \"[%s] %s\", this->device_.c_str(), error.c_str());"
     },
     {
+      "file": "esphome/components/i2c/i2c_bus_rtems.cpp",
+      "line": 37,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGE(TAG, \"Cannot open %s: %s\", this->device_.c_str(), ::strerror(errno));"
+    },
+    {
+      "file": "esphome/components/i2c/i2c_bus_rtems.cpp",
+      "line": 46,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGW(TAG, \"Cannot set the bus to %\" PRIu32 \" Hz: %s\", this->frequency_, ::strerror(errno));"
+    },
+    {
+      "file": "esphome/components/i2c/i2c_bus_rtems.cpp",
+      "line": 60,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGI(TAG, \"  Scan Results:\");"
+    },
+    {
+      "file": "esphome/components/i2c/i2c_bus_rtems.cpp",
+      "line": 63,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGI(TAG, \"    0x%02X: Found\", s.first);"
+    },
+    {
       "file": "esphome/components/i2c/i2c_bus_zephyr.cpp",
       "line": 29,
       "family": "esp-idf",
@@ -39379,6 +39411,22 @@
       "text": "const network::IPAddress &) {"
     },
     {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 42,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGW(TAG, \"mDNS is not implemented on RTEMS; this node will not be discoverable\");"
+    },
+    {
+      "file": "esphome/components/mdns/mdns_rtems.cpp",
+      "line": 43,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGW(TAG, \"  reach it by address instead\");"
+    },
+    {
       "file": "esphome/components/media_player/media_player.cpp",
       "line": 99,
       "family": "esp-idf",
@@ -43067,6 +43115,14 @@
       "text": "ESP_LOGD(TAG,"
     },
     {
+      "file": "esphome/components/mqtt/__init__.py",
+      "line": 327,
+      "family": "lwip",
+      "rule": "dns",
+      "bucket": "python",
+      "text": "# broker with lwIP's asynchronous dns_gethostbyname_addrtype() rather than"
+    },
+    {
       "file": "esphome/components/mqtt/mqtt_alarm_control_panel.cpp",
       "line": 62,
       "family": "esp-idf",
@@ -44236,7 +44292,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 13,
+      "line": 25,
       "family": "lwip",
       "rule": "include",
       "bucket": "component-local",
@@ -44244,7 +44300,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 15,
+      "line": 27,
       "family": "arduino",
       "rule": "guard",
       "bucket": "component-local",
@@ -44252,7 +44308,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 16,
+      "line": 28,
       "family": "arduino",
       "rule": "include",
       "bucket": "component-local",
@@ -44260,7 +44316,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 17,
+      "line": 29,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44268,7 +44324,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 23,
+      "line": 46,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44276,7 +44332,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 24,
+      "line": 47,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44284,7 +44340,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 25,
+      "line": 48,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44292,7 +44348,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 33,
+      "line": 56,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44300,7 +44356,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 48,
+      "line": 71,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44308,7 +44364,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 49,
+      "line": 72,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44316,7 +44372,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 58,
+      "line": 81,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44324,7 +44380,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 59,
+      "line": 82,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44332,7 +44388,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 66,
+      "line": 89,
       "family": "arduino",
       "rule": "guard",
       "bucket": "component-local",
@@ -44340,7 +44396,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 71,
+      "line": 94,
       "family": "esp-idf",
       "rule": "include",
       "bucket": "component-local",
@@ -44348,7 +44404,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 87,
+      "line": 110,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44356,7 +44412,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 90,
+      "line": 113,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44364,7 +44420,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 91,
+      "line": 114,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44372,7 +44428,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 92,
+      "line": 115,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44380,7 +44436,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 93,
+      "line": 116,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44388,7 +44444,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 106,
+      "line": 129,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44396,7 +44452,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 107,
+      "line": 130,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44404,7 +44460,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 111,
+      "line": 134,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44412,7 +44468,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 112,
+      "line": 135,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44420,7 +44476,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 118,
+      "line": 141,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44428,7 +44484,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 122,
+      "line": 145,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44436,7 +44492,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 123,
+      "line": 146,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44444,7 +44500,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 123,
+      "line": 146,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44452,7 +44508,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 124,
+      "line": 147,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44460,7 +44516,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 124,
+      "line": 147,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44468,7 +44524,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 129,
+      "line": 152,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44476,7 +44532,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 129,
+      "line": 152,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44484,7 +44540,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 134,
+      "line": 157,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44492,7 +44548,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 168,
+      "line": 191,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44500,7 +44556,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 177,
+      "line": 200,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44508,7 +44564,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 178,
+      "line": 201,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44516,7 +44572,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 185,
+      "line": 208,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44524,7 +44580,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 186,
+      "line": 209,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44532,7 +44588,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 189,
+      "line": 212,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44540,7 +44596,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 190,
+      "line": 213,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44548,7 +44604,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 190,
+      "line": 213,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44556,7 +44612,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 200,
+      "line": 223,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44564,7 +44620,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 201,
+      "line": 224,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44572,7 +44628,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 204,
+      "line": 227,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44580,7 +44636,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 204,
+      "line": 227,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44588,23 +44644,23 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 205,
+      "line": 237,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
-      "text": "IPAddress(const char *in_address) { ipaddr_aton(in_address, &ip_addr_); }"
+      "text": "IPAddress(const char *in_address) {"
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 206,
+      "line": 242,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
-      "text": "IPAddress(const std::string &in_address) { ipaddr_aton(in_address.c_str(), &ip_addr_); }"
+      "text": "IPAddress(const std::string &in_address) : IPAddress(in_address.c_str()) {}"
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 207,
+      "line": 243,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44612,7 +44668,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 207,
+      "line": 243,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44620,7 +44676,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 208,
+      "line": 244,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44628,7 +44684,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 213,
+      "line": 249,
       "family": "arduino",
       "rule": "guard",
       "bucket": "component-local",
@@ -44636,7 +44692,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 214,
+      "line": 250,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44644,7 +44700,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 217,
+      "line": 253,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44652,7 +44708,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 217,
+      "line": 253,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44660,7 +44716,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 218,
+      "line": 254,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44668,7 +44724,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 225,
+      "line": 261,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44676,7 +44732,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 230,
+      "line": 266,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44684,7 +44740,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 236,
+      "line": 272,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44692,7 +44748,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 263,
+      "line": 299,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44700,7 +44756,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 265,
+      "line": 301,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44708,7 +44764,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 268,
+      "line": 304,
       "family": "arduino",
       "rule": "guard",
       "bucket": "component-local",
@@ -44716,7 +44772,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 269,
+      "line": 305,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44724,7 +44780,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 283,
+      "line": 319,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44732,7 +44788,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 284,
+      "line": 320,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44740,7 +44796,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 285,
+      "line": 321,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -44748,7 +44804,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 298,
+      "line": 334,
       "family": "lwip",
       "rule": "addr-type",
       "bucket": "component-local",
@@ -44756,7 +44812,7 @@
     },
     {
       "file": "esphome/components/network/ip_address.h",
-      "line": 301,
+      "line": 337,
       "family": "arduino",
       "rule": "ipaddress",
       "bucket": "component-local",
@@ -57651,12 +57707,292 @@
       "text": "#include \"esp_lcd_panel_rgb.h\""
     },
     {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 66,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"This BSP does not provide <bsp/gpio.h>, so GPIO%u cannot be configured\", this->pin_);"
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 84,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"GPIO%u: cannot request as %s: %s\", this->pin_, output ? \"output\" : \"input\","
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 99,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGW(TAG, \"GPIO%u: cannot set the pull resistor: %s\", this->pin_, rtems_status_text(sc));"
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 105,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGW(TAG, \"GPIO%u: open drain is not available on RTEMS; the pin is push-pull\", this->pin_);"
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 152,
+      "family": "esp-idf",
+      "rule": "gpio",
+      "bucket": "platform-backend",
+      "text": "static rtems_gpio_irq_state gpio_isr_trampoline(void *arg) {"
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 164,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"This BSP does not provide <bsp/gpio.h>, so GPIO%u cannot interrupt\", this->pin_);"
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 185,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"GPIO%u: unknown interrupt type %u\", this->pin_, (unsigned) type);"
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 200,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"GPIO%u: cannot enable the interrupt: %s\", this->pin_, rtems_status_text(sc));"
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 210,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGW(TAG, \"GPIO%u: cannot disable the interrupt: %s\", this->pin_, rtems_status_text(sc));"
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 219,
+      "family": "esp-idf",
+      "rule": "iram-attr",
+      "bucket": "platform-backend",
+      "text": "bool IRAM_ATTR ISRInternalGPIOPin::digital_read() {"
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 228,
+      "family": "esp-idf",
+      "rule": "iram-attr",
+      "bucket": "platform-backend",
+      "text": "void IRAM_ATTR ISRInternalGPIOPin::digital_write(bool value) {"
+    },
+    {
+      "file": "esphome/components/rtems/gpio.cpp",
+      "line": 241,
+      "family": "esp-idf",
+      "rule": "iram-attr",
+      "bucket": "platform-backend",
+      "text": "void IRAM_ATTR ISRInternalGPIOPin::clear_interrupt() {"
+    },
+    {
       "file": "esphome/components/rtems/hal.h",
       "line": 13,
       "family": "esp-idf",
       "rule": "iram-attr",
       "bucket": "platform-backend",
       "text": "#define IRAM_ATTR"
+    },
+    {
+      "file": "esphome/components/rtems/helpers.cpp",
+      "line": 92,
+      "family": "lwip",
+      "rule": "include",
+      "bucket": "platform-backend",
+      "text": "#include <lwip/tcpip.h>"
+    },
+    {
+      "file": "esphome/components/rtems/i2c.cpp",
+      "line": 44,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"This board has %d I2C controller(s); port %d does not exist\", BSP_I2C_BUS_COUNT, port);"
+    },
+    {
+      "file": "esphome/components/rtems/i2c.cpp",
+      "line": 50,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"Cannot register %s: %s\", path, rtems_status_text(sc));"
+    },
+    {
+      "file": "esphome/components/rtems/i2c.cpp",
+      "line": 56,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"This BSP has no I2C controller driver, so %s cannot be created\", path);"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 16,
+      "family": "lwip",
+      "rule": "include",
+      "bucket": "platform-backend",
+      "text": "#include <lwip/dhcp.h>"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 17,
+      "family": "lwip",
+      "rule": "include",
+      "bucket": "platform-backend",
+      "text": "#include <lwip/netif.h>"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 36,
+      "family": "lwip",
+      "rule": "netif",
+      "bucket": "platform-backend",
+      "text": "return netif_default != nullptr && netif_is_up(netif_default) && netif_is_link_up(netif_default);"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 46,
+      "family": "lwip",
+      "rule": "netif",
+      "bucket": "platform-backend",
+      "text": "static struct netif s_netif;"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 61,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"This BSP has no network stack, so no interface can be brought up\");"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 64,
+      "family": "lwip",
+      "rule": "addr-type",
+      "bucket": "platform-backend",
+      "text": "ip_addr_t address, netmask, gateway;"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 90,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"Could not bring the interface up\");"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 97,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"Could not start DHCP\");"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 104,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGI(TAG, \"DHCP started\");"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 113,
+      "family": "lwip",
+      "rule": "netif",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGCONFIG(TAG, \"  Address: %s\", ip4addr_ntoa(netif_ip4_addr(netif_default)));"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 114,
+      "family": "lwip",
+      "rule": "netif",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGCONFIG(TAG, \"  Netmask: %s\", ip4addr_ntoa(netif_ip4_netmask(netif_default)));"
+    },
+    {
+      "file": "esphome/components/rtems/network.cpp",
+      "line": 115,
+      "family": "lwip",
+      "rule": "netif",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGCONFIG(TAG, \"  Gateway: %s\", ip4addr_ntoa(netif_ip4_gw(netif_default)));"
+    },
+    {
+      "file": "esphome/components/rtems/preferences.cpp",
+      "line": 146,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGW(TAG, \"Ignoring a preferences store that did not read back cleanly: %s\", this->path_);"
+    },
+    {
+      "file": "esphome/components/rtems/preferences.cpp",
+      "line": 154,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGD(TAG, \"Loaded %u preferences from %s\", (unsigned) this->data_.size(), this->path_);"
+    },
+    {
+      "file": "esphome/components/rtems/preferences.cpp",
+      "line": 164,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGW(TAG, \"Cannot write %s: %s\", tmp.c_str(), ::strerror(errno));"
+    },
+    {
+      "file": "esphome/components/rtems/preferences.cpp",
+      "line": 214,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGW(TAG, \"Cannot replace %s: %s\", this->path_, ::strerror(errno));"
+    },
+    {
+      "file": "esphome/components/rtems/uart.cpp",
+      "line": 56,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"This board has %d UART(s); port %d does not exist\", BSP_UART_PORT_COUNT, port);"
+    },
+    {
+      "file": "esphome/components/rtems/uart.cpp",
+      "line": 62,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"Cannot register %s on port %d: %s\", path, port, rtems_status_text(sc));"
+    },
+    {
+      "file": "esphome/components/rtems/uart.cpp",
+      "line": 70,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "platform-backend",
+      "text": "ESP_LOGE(TAG, \"This BSP has no UART driver, so %s cannot be created\", path);"
     },
     {
       "file": "esphome/components/rtttl/rtttl.cpp",
@@ -62364,7 +62700,7 @@
     },
     {
       "file": "esphome/components/socket/__init__.py",
-      "line": 179,
+      "line": 186,
       "family": "lwip",
       "rule": "sockets",
       "bucket": "python",
@@ -62372,7 +62708,7 @@
     },
     {
       "file": "esphome/components/socket/__init__.py",
-      "line": 180,
+      "line": 187,
       "family": "lwip",
       "rule": "sockets",
       "bucket": "python",
@@ -62452,7 +62788,7 @@
     },
     {
       "file": "esphome/components/socket/headers.h",
-      "line": 177,
+      "line": 180,
       "family": "arduino",
       "rule": "guard",
       "bucket": "seam",
@@ -68561,6 +68897,62 @@
       "rule": "log",
       "bucket": "component-local",
       "text": "ESP_LOGV(TAG, \"Using Hardware Serial\");"
+    },
+    {
+      "file": "esphome/components/uart/uart_component_rtems.cpp",
+      "line": 50,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGE(TAG, \"tcgetattr: %s\", ::strerror(errno));"
+    },
+    {
+      "file": "esphome/components/uart/uart_component_rtems.cpp",
+      "line": 62,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGE(TAG, \"%\" PRIu32 \" baud is not one of the rates termios can express\", this->baud_rate_);"
+    },
+    {
+      "file": "esphome/components/uart/uart_component_rtems.cpp",
+      "line": 96,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGE(TAG, \"tcsetattr: %s\", ::strerror(errno));"
+    },
+    {
+      "file": "esphome/components/uart/uart_component_rtems.cpp",
+      "line": 115,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGE(TAG, \"Cannot open %s: %s\", this->device_.c_str(), ::strerror(errno));"
+    },
+    {
+      "file": "esphome/components/uart/uart_component_rtems.cpp",
+      "line": 169,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGE(TAG, \"write: %s\", ::strerror(errno));"
+    },
+    {
+      "file": "esphome/components/uart/uart_component_rtems.cpp",
+      "line": 223,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGE(TAG, \"read: %s\", ::strerror(errno));"
+    },
+    {
+      "file": "esphome/components/uart/uart_component_rtems.cpp",
+      "line": 261,
+      "family": "esp-idf",
+      "rule": "log",
+      "bucket": "component-local",
+      "text": "ESP_LOGW(TAG, \"tcdrain: %s\", ::strerror(errno));"
     },
     {
       "file": "esphome/components/uart/uart_debugger.cpp",
@@ -80004,7 +80396,7 @@
     },
     {
       "file": "esphome/core/helpers.h",
-      "line": 2141,
+      "line": 2147,
       "family": "esp-idf",
       "rule": "heap-caps",
       "bucket": "core-blocker",
@@ -80012,7 +80404,7 @@
     },
     {
       "file": "esphome/core/helpers.h",
-      "line": 2156,
+      "line": 2162,
       "family": "esp-idf",
       "rule": "heap-caps",
       "bucket": "core-blocker",
@@ -80020,7 +80412,7 @@
     },
     {
       "file": "esphome/core/helpers.h",
-      "line": 2176,
+      "line": 2182,
       "family": "esp-idf",
       "rule": "heap-caps",
       "bucket": "core-blocker",
@@ -80028,7 +80420,7 @@
     },
     {
       "file": "esphome/core/helpers.h",
-      "line": 2178,
+      "line": 2184,
       "family": "esp-idf",
       "rule": "heap-caps",
       "bucket": "core-blocker",
@@ -80036,7 +80428,7 @@
     },
     {
       "file": "esphome/core/helpers.h",
-      "line": 2197,
+      "line": 2203,
       "family": "esp-idf",
       "rule": "heap-caps",
       "bucket": "core-blocker",
@@ -80044,7 +80436,7 @@
     },
     {
       "file": "esphome/core/helpers.h",
-      "line": 2199,
+      "line": 2205,
       "family": "esp-idf",
       "rule": "heap-caps",
       "bucket": "core-blocker",
@@ -80052,7 +80444,7 @@
     },
     {
       "file": "esphome/core/helpers.h",
-      "line": 2214,
+      "line": 2220,
       "family": "esp-idf",
       "rule": "heap-caps",
       "bucket": "core-blocker",
@@ -80060,7 +80452,7 @@
     },
     {
       "file": "esphome/core/helpers.h",
-      "line": 2215,
+      "line": 2221,
       "family": "esp-idf",
       "rule": "heap-caps",
       "bucket": "core-blocker",

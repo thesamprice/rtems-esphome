@@ -14,9 +14,9 @@ with before an RTEMS image runs at all.
 |---|---:|---|
 | core-blocker | 123 | **must be addressed to boot** — core, not behind a seam |
 | seam | 4 | dispatch or interface declaration, not implementation |
-| platform-backend | 284 | a platform doing its job; an RTEMS port adds a sibling |
-| component-local | 9559 | decides which components an RTEMS build can offer |
-| python | 89 | build-time validation and code generation |
+| platform-backend | 319 | a platform doing its job; an RTEMS port adds a sibling |
+| component-local | 9572 | decides which components an RTEMS build can offer |
+| python | 90 | build-time validation and code generation |
 
 ## The core blockers, by file
 
@@ -50,8 +50,8 @@ fast path with an obvious replacement — but it is not optional.
 | family | core-blocker | seam | platform-backend | component-local | python |
 |---|---:|---:|---:|---:|---:|
 | freertos | 44 | 0 | 25 | 301 | 2 |
-| lwip | 4 | 2 | 1 | 149 | 8 |
-| esp-idf | 70 | 0 | 236 | 8819 | 64 |
+| lwip | 4 | 2 | 10 | 149 | 9 |
+| esp-idf | 70 | 0 | 262 | 8832 | 64 |
 | arduino | 5 | 2 | 22 | 290 | 15 |
 
 ## Components with the most platform coupling
@@ -73,16 +73,16 @@ rather than half-support.
 | `esphome/components/pn7150` | 126 |
 | `esphome/components/espnow` | 113 |
 | `esphome/components/tuya` | 111 |
-| `esphome/components/i2c` | 105 |
+| `esphome/components/i2c` | 109 |
 | `esphome/components/esp32_ble` | 104 |
 | `esphome/components/audio` | 95 |
 | `esphome/components/http_request` | 94 |
+| `esphome/components/uart` | 92 |
 | `esphome/components/mqtt` | 90 |
 | `esphome/components/remote_base` | 90 |
 | `esphome/components/zigbee` | 89 |
 | `esphome/components/bluetooth_connection` | 85 |
 | `esphome/components/network` | 85 |
-| `esphome/components/uart` | 85 |
 | `esphome/components/modbus` | 80 |
 | `esphome/components/usb_uart` | 78 |
 | `esphome/components/openthread` | 75 |

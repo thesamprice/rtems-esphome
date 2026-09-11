@@ -118,8 +118,30 @@ flash="$OUT/flash.bin"
 
 # Direct boot: the build backend's objcopy output is already the flash
 # contents, so this only pads it out to the size QEMU should model.
-dd if=/dev/zero of="$flash" bs=1m count=$((FLASH_SIZE / 1024 / 1024)) 2>/dev/null
-dd if="$IMAGE" of="$flash" conv=notrunc 2>/dev/null
+# bs takes a plain byte count, not "1m".  That suffix is BSD's; GNU dd spells it
+# "1M" and rejects the lowercase form, so this worked on a developer's Mac and
+# produced a zero-length image in CI, where QEMU refused the drive and the run
+# loop below reported a timeout for a guest that never started.
+if ! dd if=/dev/zero of="$flash" bs=1048576 count=$((FLASH_SIZE / 1048576)) 2>"$OUT/dd.err"; then
+  echo "error: could not create the $((FLASH_SIZE / 1048576))MB flash image" >&2
+  cat "$OUT/dd.err" >&2
+  exit 2
+fi
+rm -f "$OUT/dd.err"
+
+if ! dd if="$IMAGE" of="$flash" conv=notrunc 2>/dev/null; then
+  echo "error: could not place $IMAGE in the flash image" >&2
+  exit 2
+fi
+
+# QEMU accepts only 2, 4, 8 and 16MB flash images and refuses anything else with
+# a drive error the run loop cannot tell from a firmware that never booted.
+actual=$(wc -c < "$flash" | tr -d ' ')
+if [ "$actual" != "$FLASH_SIZE" ]; then
+  echo "error: flash image is $actual bytes, expected $FLASH_SIZE" >&2
+  exit 2
+fi
+
 printf 'image: %s (%s bytes)\n' "$IMAGE" "$(wc -c < "$IMAGE" | tr -d ' ')"
 
 rm -f "$log"

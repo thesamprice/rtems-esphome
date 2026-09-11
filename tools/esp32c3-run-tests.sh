@@ -123,10 +123,16 @@ make_flash() {
   "$OBJCOPY" -O binary "$1" "$2.raw" 2>/dev/null || return 1
   # Pad rather than truncate: the image is smaller than the flash, and QEMU
   # takes the flash size from the file it is given.
-  dd if=/dev/zero of="$2" bs=1m count=$((FLASH_SIZE / 1024 / 1024)) \
+  # bs takes a plain byte count.  "1m" is BSD's spelling and GNU dd rejects it,
+  # which on Linux leaves a zero-length image that QEMU refuses -- indisting-
+  # uishable, from the caller, from a test that failed to boot.
+  dd if=/dev/zero of="$2" bs=1048576 count=$((FLASH_SIZE / 1048576)) \
      2>/dev/null || return 1
   dd if="$2.raw" of="$2" conv=notrunc 2>/dev/null || return 1
   rm -f "$2.raw"
+  # Refuse to hand QEMU an image it cannot model rather than let the run look
+  # like a failed test.
+  [ "$(wc -c < "$2" | tr -d ' ')" = "$FLASH_SIZE" ] || return 1
 }
 
 # ---------------------------------------------------------------- QEMU check

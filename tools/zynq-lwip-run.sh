@@ -93,7 +93,15 @@ fi
 qpid=$!
 
 verdict=TIMEOUT
-if [ "$CONNECT" = 1 ]; then
+# Only the built-in exchange waits for "listening on".  A lane with its own
+# client waits for its own thing below, and this loop would run first and burn
+# the whole timeout looking for a string that lane never prints -- ESPHome does
+# not print it.  That was not a slow pass, it was a failure: the guest reboots
+# on the API's no-client timeout, -no-reboot stops QEMU when it does, and the
+# client then found nothing listening.  With -t below the reboot it passed and
+# above it failed, which is a timeout-dependent result and the sign that the
+# wait was wrong rather than merely long.
+if [ "$CONNECT" = 1 ] && [ -z "$CLIENT" ]; then
   for _ in $(seq 1 $((TMO * 2))); do
     grep -q "listening on" "$log" 2>/dev/null && break
     kill -0 $qpid 2>/dev/null || break

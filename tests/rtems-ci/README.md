@@ -84,9 +84,31 @@ rather than the platform backend's: `bsp-pin`, `bsp-tick`, `bsp-opendrain`,
 4. `zynq-mqtt.yaml` is not finished and is not tracked. It is listed so that
    its absence is deliberate rather than an oversight.
 
-All nine Zynq lanes have been run by hand and pass, but against a BSP built
-from a different RTEMS revision than this tree pins — so that is evidence they
-still work, not evidence they work against this pin. #72 has the detail.
+All eight tracked Zynq lanes have been run by hand against a BSP and an
+rtems-lwip built from **this tree's pin** (`b03d4c0119`, confirmed in the
+binaries rather than assumed), and all eight pass. What is missing is only the
+image change that would make CI do it. `config_zynq_a9_qemu.ini` is the BSP
+config; `tests/zynq-lwip/README.md` has the rtems-lwip recipe.
+
+Nothing has to be installed over the toolchain prefix to reproduce that. Build
+into a scratch prefix whose `bin` is a symlink to the real one, and point
+ESPHome at it:
+
+```sh
+PFX=/tmp/zynq-prefix
+mkdir -p $PFX && ln -s $HOME/rtems/7/bin $PFX/bin
+( cd src/rtems && ./waf configure --rtems-config=../../config_zynq_a9_qemu.ini \
+      --out=build-zynq --prefix=$PFX && ./waf --out=build-zynq && \
+      ./waf --out=build-zynq install )
+( cd src/rtems-lwip && PKG_CONFIG_PATH=$PFX/lib/pkgconfig \
+      ./waf configure --prefix=$PFX --rtems-bsps=arm/xilinx_zynq_a9_qemu && \
+      ./waf build && ./waf install )
+RTEMS_TOOLS_PREFIX=$PFX ../../.venv/bin/esphome compile zynq-api.yaml
+```
+
+That matters because the prefix may already hold a BSP from a different RTEMS
+checkout, and linking against one silently is how a lane passes while testing
+something other than what is in the tree.
 
 ### `gpio.yaml`
 

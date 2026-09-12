@@ -44,21 +44,49 @@ Verified against a real crash log, not just written to look right.
 lane's. The other two are RTEMS-only on purpose — adding their checks to the
 reference node would turn the A/B into a comparison of something else.
 
-| config | what it proves |
-|---|---|
-| `reference-node.yaml` | the same node builds and runs on both stacks |
-| `primitives.yaml` | time, mutexes, ISR wake, priority inheritance |
-| `gpio.yaml` | a pin declared in YAML is really driven, and its interrupt really arrives |
-| `i2c.yaml` | a real device on the bus answers, and one that is not there does not |
-| `uart.yaml` | bytes leave the port and the reply comes back |
-| `zynq-scheduler.yaml` | the same node runs on a second BSP, on a different architecture |
-| `zynq-socket.yaml` | ESPHome's own socket layer accepts a connection over lwip |
-| `zynq-ip.yaml` | addresses parse, format and compare, both families |
-| `zynq-api.yaml` | **a Home Assistant client talks to the node over the native API** |
-| `zynq-dns.yaml` | names resolve asynchronously without stalling the main loop |
-| `zynq-prefs.yaml` | preferences reach a file, come back off it, and a damaged one is refused |
-| `zynq-threads.yaml` | the core helpers are correct when a second RTEMS task uses them |
-| `zynq-mdns.yaml` | the node advertises itself, and the stack survives advertising |
+A lane that exists but is not enforced reads as coverage and is not, so the
+third column says which are enforced and the ones that are not say why.
+
+| config | what it proves | in CI |
+|---|---|---|
+| `reference-node.yaml` | the same node builds and runs on both stacks | yes |
+| `primitives.yaml` | time, mutexes, ISR wake, priority inheritance | yes |
+| `scheduler.yaml` | the scheduler's ordering and drift, both icount modes | yes |
+| `gpio.yaml` | a pin declared in YAML is really driven, and its interrupt really arrives | yes |
+| `i2c.yaml` | a real device on the bus answers, and one that is not there does not | yes |
+| `uart.yaml` | bytes leave the port and the reply comes back | yes |
+| `sensor.yaml` | an upstream ESPHome component, unmodified, reads a modelled device | yes |
+| `spi.yaml` | ESPHome's SPI stack reads an SSI flash on GPSPI2 | yes |
+| `zynq-scheduler.yaml` | the same node runs on a second BSP, on a different architecture | **no** — 1 |
+| `zynq-socket.yaml` | ESPHome's own socket layer accepts a connection over lwip | **no** — 1, 2 |
+| `zynq-ip.yaml` | addresses parse, format and compare, both families | **no** — 1, 2 |
+| `zynq-api.yaml` | **a Home Assistant client talks to the node over the native API** | **no** — 1, 2, 3 |
+| `zynq-dns.yaml` | names resolve asynchronously without stalling the main loop | **no** — 1, 2 |
+| `zynq-prefs.yaml` | preferences reach a file, come back off it, and a damaged one is refused | **no** — 1 |
+| `zynq-threads.yaml` | the core helpers are correct when a second RTEMS task uses them | **no** — 1 |
+| `zynq-mdns.yaml` | the node advertises itself, and the stack survives advertising | **no** — 1, 2, 3 |
+| `zynq-mqtt.yaml` | *(untracked, not finished)* | **no** — 4 |
+
+The BSP tests under `tests/bsp-*` all run in CI. They have no ESPHome in them
+— each drives a driver or a BSP facility directly — so a failure is the BSP's
+rather than the platform backend's: `bsp-pin`, `bsp-tick`, `bsp-opendrain`,
+`bsp-i2c`, `bsp-gpspi`, `bsp-spidrv`.
+
+**Why the Zynq lanes are not enforced**
+
+1. The toolchain image has no ARM toolchain and no `arm/xilinx_zynq_a9_qemu`
+   BSP. Adding them means a second RSB build, roughly doubling the image, which
+   is a real change and wants its own review. See #72.
+2. Also needs rtems-lwip built and installed against that BSP —
+   `tests/zynq-lwip/README.md` has the recipe.
+3. Also needs `aioesphomeapi` on the runner and a forwarded port; the verdict
+   comes from the client's exit status rather than a marker in the guest log.
+4. `zynq-mqtt.yaml` is not finished and is not tracked. It is listed so that
+   its absence is deliberate rather than an oversight.
+
+All nine Zynq lanes have been run by hand and pass, but against a BSP built
+from a different RTEMS revision than this tree pins — so that is evidence they
+still work, not evidence they work against this pin. #72 has the detail.
 
 ### `gpio.yaml`
 

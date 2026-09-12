@@ -112,6 +112,8 @@ jobs:
           ../../.venv/bin/esphome compile gpio.yaml
           ../../.venv/bin/esphome compile i2c.yaml
           ../../.venv/bin/esphome compile uart.yaml
+          ../../.venv/bin/esphome compile sensor.yaml
+          ../../.venv/bin/esphome compile spi.yaml
       - name: Run the reference node
         run: |
           tools/rtems-ci-run.sh -o rtems-results/reference \

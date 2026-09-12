@@ -1,0 +1,2991 @@
+{
+ "bsp": "riscv/esp32c3db",
+ "components": {
+  "a01nyub": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "a02yyuw": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "a4988": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "absolute_humidity": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ac_dimmer": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "adalight": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "adc": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "adc128s102": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "addressable_light": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ade7880": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ade7953": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ade7953_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ade7953_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ade7953_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ads1115": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ads1118": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ags10": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "aht10": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "aic3204": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "airthings_ble": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "airthings_wave_base": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "airthings_wave_mini": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "airthings_wave_plus": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "alarm_control_panel": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "alpha3": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "am2315c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "am2320": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "am43": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "analog_threshold": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "animation": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "anova": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "apds9306": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "apds9960": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "api": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "aqi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "as3935": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "as3935_i2c": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "as3935_spi": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "as5600": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "as7341": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "async_tcp": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "at581x": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "atc_mithermometer": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "atm90e26": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "atm90e32": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "audio": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "audio_adc": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "audio_dac": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "audio_file": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "audio_http": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "axs15231": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "b_parasite": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ballu": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bang_bang": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bedjet": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "beken_spi_led_strip": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bh1750": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bh1900nux": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "binary": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "binary_sensor": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "binary_sensor_map": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bk72xx": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "bk72xx_ble": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "bk72xx_ble_tracker": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "bl0906": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bl0939": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bl0940": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bl0942": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ble_client": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ble_device_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ble_nus": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ble_presence": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ble_rssi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ble_scanner": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bluetooth_connection": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bluetooth_proxy": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "bm8563": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bme280_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bme280_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bme280_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bme680": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bme680_bsec": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "bme68x_bsec2": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bme68x_bsec2_i2c": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "bmi160": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmi270": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp085": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp280": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp280_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp280_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp280_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp3xx": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp3xx_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp3xx_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp3xx_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp581": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp581_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp581_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bmp581_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bp1658cj": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bp5758d": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "bthome_mithermometer": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "button": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "bytebuffer": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "camera": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "camera_encoder": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "canbus": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "cap1188": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "captive_portal": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "cc1101": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ccs811": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "cd74hc4067": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ch422g": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ch423": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "chsc6x": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "climate": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "climate_ir": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "climate_ir_lg": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "cm1106": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "color": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "color_temperature": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "combination": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "const": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "coolix": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "copy": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "cover": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "cs5460a": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "cse7761": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "cse7766": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "cst226": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "cst328": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "cst816": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "cst9220": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ct_clamp": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "current_based": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "custom": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "custom_component": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "cwww": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "d01": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "dac7678": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "daikin": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "daikin_arc": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "daikin_brc": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "dallas": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "dallas_temp": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "daly_bms": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "dashboard_import": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "datetime": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "debug": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "deep_sleep": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "delonghi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "demo": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "dew_point": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "dfplayer": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "dfrobot_sen0395": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "dht": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "dht12": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "display": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "display_menu_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "dlms_meter": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "dps310": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ds1307": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ds1603l": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ds2484": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ds248x": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "dsmr": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "duty_cycle": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "duty_time": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "e131": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ee895": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ektf2232": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "emc2101": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "emmeti": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "emontx": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "endstop": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ens160": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ens160_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ens160_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ens160_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ens210": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "epaper_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "es7210": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "es7243e": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "es8156": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "es8311": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "es8388": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "esp32": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp32_ble": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp32_ble_beacon": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp32_ble_client": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp32_ble_server": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp32_ble_tracker": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp32_camera": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp32_camera_web_server": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp32_can": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "esp32_dac": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "esp32_hall": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "esp32_hosted": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp32_improv": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp32_rmt": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "esp32_rmt_led_strip": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "esp32_touch": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp8266": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "esp8266_pwm": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "esp_ldo": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "espnow": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ethernet": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ethernet_info": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "event": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "exposure_notifications": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "external_components": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "ezo": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ezo_pmp": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "factory_reset": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "fan": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "fastled_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "fastled_clockless": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "fastled_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "feedback": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "file": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "fingerprint_grow": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "font": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "fs3000": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ft5x06": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ft63x6": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "fujitsu_general": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "gcja5": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "gdk101": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "gl_r01_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "globals": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "gp2y1010au0f": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "gp8403": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "gpio": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "gpio_expander": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "gps": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "graph": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "graphical_display_menu": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "gree": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "grove_gas_mc_v2": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "grove_tb6612fng": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "growatt_solar": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "gsl3670": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "gt911": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "haier": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "havells_solar": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hbridge": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hc8": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hdc1080": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hdc2010": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hdc2080": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hdc302x": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "he60r": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "heatpumpir": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hitachi_ac344": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hitachi_ac424": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hlk_fm22x": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "hlw8012": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hlw8032": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hm3301": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hmac_md5": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "hmac_sha256": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "hmc5883l": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hoermann_hcp": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "homeassistant": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "honeywell_hih_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "honeywellabp": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "honeywellabp2_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "host": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "hrxl_maxsonar_wr": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hte501": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "http_request": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "htu21d": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "htu31d": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hub75": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hx711": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "hydreon_rgxx": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "hyt271": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "i2c_device": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "i2s_audio": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "iaqcore": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ili9341": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ili9xxx": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "image": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "improv_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "improv_serial": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ina219": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ina226": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ina260": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ina2xx_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ina2xx_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ina2xx_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ina3221": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "infrared": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "inkbird_ibsth1_mini": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "inkplate": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "inkplate6": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "integration": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "internal_temperature": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "interval": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ir_rf_proxy": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "it8951": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "jsn_sr04t": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "json": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "kalman_combinator": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "kamstrup_kmp": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "key_collector": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "key_provider": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "kmeteriso": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "kuntze": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "lc709203f": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "lcd_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "lcd_gpio": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "lcd_menu": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "lcd_pcf8574": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ld2410": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ld2412": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ld2420": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ld2450": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ld24xx": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ld6002b": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ledc": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "libretiny": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "libretiny_pwm": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "light": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "lightwaverf": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "lilygo_t5_47": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "lm75b": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ln882h_ble": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ln882h_ble_tracker": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ln882x": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "lock": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "logger": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "lps22": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "lsm6ds": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ltr390": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ltr501": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ltr_als_ps": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "lvgl": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "m5stack_8angle": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mapping": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "matrix_keypad": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "max17043": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "max31855": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "max31856": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "max31865": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "max44009": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "max6675": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "max6956": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "max7219": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "max7219digit": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "max9611": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mcp23008": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mcp23016": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mcp23017": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mcp23s08": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mcp23s17": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mcp23x08_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mcp23x17_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mcp23xxx_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mcp2515": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mcp3008": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mcp3204": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mcp3221": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mcp4461": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mcp4725": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mcp4728": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mcp47a1": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mcp9600": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mcp9808": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "md5": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mdns": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "media_player": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "media_source": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "mhz19": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "micro_wake_word": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "micronova": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "microphone": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "mics_4514": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "midea": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "midea_ac": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "midea_ir": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mipi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mipi_dsi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mipi_rgb": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mipi_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mitsubishi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mitsubishi_cn105": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mixer": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mk2pvrouter": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mlx90393": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mlx90614": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mmc5603": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mmc5983": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "modbus": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "modbus_client": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "modbus_controller": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "modbus_server": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "monochromatic": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mopeka_ble": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "mopeka_pro_check": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mopeka_std_check": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "motion": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "mpl3115a2": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mpr121": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mpu6050": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mpu6886": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "mqtt": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "mqtt_subscribe": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ms5611": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ms8607": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "msa3xx": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "my9231": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "nau7802": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "neopixelbus": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "network": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "nextion": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "nfc": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "noblex": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "noise": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "npi19": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "nrf52": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ntc": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "number": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "one_wire": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "online_image": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "opentherm": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "openthread": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "openthread_info": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "opt3001": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ota": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "output": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "packages": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "packet_transport": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "partition": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pca6416a": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pca9554": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pca9685": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pcd8544": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pcf85063": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pcf8563": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pcf8574": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pcm5122": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pi4ioe5v6408": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pid": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pipsolar": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pixoo": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pm1006": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pm2005": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pmsa003i": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pmsx003": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pmwcs3": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pn532": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "pn532_i2c": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pn532_spi": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pn7150": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pn7150_i2c": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pn7160": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pn7160_i2c": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pn7160_spi": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "power_supply": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "preferences": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "prometheus": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "provisioning": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "psram": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pulse_counter": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pulse_meter": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pulse_width": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pvvx_mithermometer": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pylontech": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "pzem004t": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pzemac": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "pzemdc": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "qmc5883l": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "qmi8658": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "qmp6988": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "qr_code": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "qspi_dbi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "qwiic_pir": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "radio_frequency": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "radon_eye_ble": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "radon_eye_rd200": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rc522": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rc522_i2c": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rc522_spi": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rd03d": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rdm6300": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "remote_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "remote_receiver": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "remote_transmitter": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "resampler": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "resistance": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "restart": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rf_bridge": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rgb": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rgbct": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rgbw": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rgbww": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ring_buffer": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rotary_encoder": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "router": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rp2": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rp2040_ble": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rp2040_pio_led_strip": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rp2040_pwm": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rp2_ble_tracker": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rp2_pio": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rpi_dpi_rgb": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rtems": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rtl87xx": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "rtttl": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "runtime_image": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "runtime_stats": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "ruuvi_ble": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "ruuvitag": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "rx8130": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "safe_mode": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "scd30": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "scd4x": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "script": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sdl": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sdm_meter": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sdp3x": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sds011": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "seeed_mr24hpc1": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "seeed_mr60bha2": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "seeed_mr60fda2": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "selec_meter": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "select": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "sen0321": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sen21231": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sen5x": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sen6x": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sendspin": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "senseair": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sensirion_common": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sensor": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "serial_proxy": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "servo": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sfa30": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sfa40": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sgp30": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sgp40": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sgp4x": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sha256": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "shelly_dimmer": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sht3xd": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sht4x": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "shtcx": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "shutdown": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sigma_delta_output": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sim800l": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "slow_pwm": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sm10bit_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sm16716": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sm2135": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sm2235": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sm2335": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sm300d2": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sml": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "smt100": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sn74hc165": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sn74hc595": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "snapshot": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sntp": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "socket": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "sonoff_d1": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sound_level": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "spa06_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "spa06_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "spa06_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "speaker": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "speaker_source": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "speed": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "spi": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "spi_device": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "spi_led_strip": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "split_buffer": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "sprinkler": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "sps30": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1306_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1306_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1306_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1322_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1322_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1325_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1325_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1327_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1327_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1327_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1331_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1331_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1351_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ssd1351_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "st7123": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "st7567_base": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "st7567_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "st7567_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "st7701s": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "st7735": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "st7789v": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "st7920": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "statsd": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "status": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "status_led": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "stepper": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "sts3x": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "stts22h": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "substitutions": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "sun": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "sun_gtil2": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "switch": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "sx126x": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "sx127x": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "sx1509": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "sy6970": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "syslog": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "t6615": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tc74": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tca9548a": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "tca9555": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "tcl112": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tcs34725": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tee501": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "teleinfo": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "tem3200": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "template": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "text": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "text_sensor": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "thermopro_ble": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "thermostat": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "time": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "time_based": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tinyusb": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "tlc59208f": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "tlc5947": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tlc5971": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tm1621": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tm1637": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tm1638": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tm1651": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tmp102": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tmp1075": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tmp117": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tof10120": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tormatic": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "toshiba": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "total_daily_energy": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "touchscreen": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "tsl2561": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tsl2591": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "tt21100": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ttp229_bsf": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ttp229_lsf": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "tuya": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "tx20": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "uart": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "udp": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "ufire_ec": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ufire_ise": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ufm01": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "uln2003": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "ultrasonic": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "update": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "uponor_smatrix": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "uptime": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "usb_cdc_acm": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "usb_host": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "usb_uart": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "valve": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "vbus": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "veml3235": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "veml7700": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "version": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "vl53l0x": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "voice_assistant": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "voltage_sampler": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "wake_on_lan": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "watchdog": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "water_heater": {
+   "detail": "",
+   "verdict": "accepted"
+  },
+  "waveshare_epaper": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "waveshare_io_ch32v003": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "web_server": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "web_server_base": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "web_server_idf": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "weikai": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "weikai_i2c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "weikai_spi": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "whirlpool": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "whynter": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "wiegand": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "wifi": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "wifi_info": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "wifi_signal": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "wireguard": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "wk2132_i2c": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "wk2132_spi": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "wk2168_i2c": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "wk2168_spi": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "wk2204_i2c": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "wk2204_spi": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "wk2212_i2c": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "wk2212_spi": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "wl_134": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "wled": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "wts01": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "x9c": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xdb401": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xgzp68xx": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_ble": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "xiaomi_cgd1": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_cgdk2": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_cgg1": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_cgpr1": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_gcls002": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_hhccjcy01": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_hhccjcy10": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_hhccpot002": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_jqjcy01ym": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_lywsd02": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_lywsd02mmc": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_lywsd03mmc": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_lywsdcgq": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_mhoc303": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_mhoc401": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_miscale": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_miscale2": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_mjyd02yla": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_mue4094rt": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_rtcgq02lm": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "xiaomi_wx08zm": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xiaomi_xmwsdj04mmc": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "xl9535": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "xpt2046": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "xxtea": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "yashima": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "zephyr": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "zephyr_ble_server": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "zephyr_mcumgr": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "zephyr_pwm": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "zhlt01": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "zigbee": {
+   "detail": "",
+   "verdict": "gated"
+  },
+  "zio_ultrasonic": {
+   "detail": "",
+   "verdict": "needs-args"
+  },
+  "zwave_proxy": {
+   "detail": "",
+   "verdict": "refused-other"
+  },
+  "zyaura": {
+   "detail": "",
+   "verdict": "needs-args"
+  }
+ },
+ "counts": {
+  "accepted": 51,
+  "gated": 19,
+  "needs-args": 478,
+  "refused-other": 197
+ }
+}

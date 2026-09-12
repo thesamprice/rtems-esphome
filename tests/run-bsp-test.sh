@@ -18,9 +18,13 @@
 set -eu
 
 top="$(cd "$(dirname "$0")/.." && pwd)"
-TESTDIR=${1:?usage: run-bsp-test.sh <test-dir> [outdir]}
+TESTDIR=${1:?usage: run-bsp-test.sh <test-dir> [outdir] [-- qemu args...]}
 NAME=$(basename "$TESTDIR")
 OUT=${2:-$top/$NAME-results}
+shift 2 2>/dev/null || shift $# 
+# Anything after -- reaches QEMU, which is how a lane gets a device on a bus.
+if [ "${1:-}" = "--" ]; then shift; fi
+EXTRA="$*"
 PREFIX=${RTEMS_TOOLS_PREFIX:-$HOME/rtems/7}
 BUILD=${RTEMS_BUILD:-$top/src/rtems/build-esp32c3db}
 QEMU=${QEMU_ESP32C3:-$top/src/esp-qemu/build/qemu-system-riscv32}
@@ -56,6 +60,7 @@ log=$OUT/run.log
 rm -f "$log"
 "$QEMU" -M esp32c3 -display none -monitor none -no-reboot -icount shift=0,sleep=off \
   -serial file:"$log" -drive file="$OUT/flash.bin",if=mtd,format=raw \
+  $EXTRA \
   > /dev/null 2>&1 &
 qpid=$!
 for _ in $(seq 1 120); do

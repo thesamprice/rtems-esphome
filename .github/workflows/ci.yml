@@ -159,6 +159,30 @@ jobs:
             tests/rtems-ci/.esphome/build/sensortest/sensortest.bin \
             -- -device tmp105,address=0x48,id=temp0
 
+      # The BSP tests, which have no ESPHome in them: each drives a driver or a
+      # BSP facility directly, so a failure is the BSP's rather than the
+      # platform backend's.  They link against the BSP the image ships, which
+      # is the artifact this job is really testing.
+      #
+      # Seconds each -- the whole group costs less than one ESPHome compile --
+      # so they run as a group rather than being rationed.
+      - name: Run the BSP tests
+        run: |
+          dd if=/dev/zero of=/tmp/spiflash.img bs=1048576 count=2 2>/dev/null
+          fail=0
+          tests/run-bsp-test.sh tests/bsp-pin       bsp-results/pin       || fail=1
+          tests/run-bsp-test.sh tests/bsp-tick      bsp-results/tick      || fail=1
+          tests/run-bsp-test.sh tests/bsp-opendrain bsp-results/opendrain || fail=1
+          tests/run-bsp-test.sh tests/bsp-i2c       bsp-results/i2c       -- \
+            -device tmp105,address=0x48 || fail=1
+          tests/run-bsp-test.sh tests/bsp-gpspi     bsp-results/gpspi     -- \
+            -drive file=/tmp/spiflash.img,if=none,format=raw,id=sf0 \
+            -device is25lp016d,bus=gpspi2,drive=sf0 || fail=1
+          tests/run-bsp-test.sh tests/bsp-spidrv    bsp-results/spidrv    -- \
+            -drive file=/tmp/spiflash.img,if=none,format=raw,id=sf1 \
+            -device is25lp016d,bus=gpspi2,drive=sf1 || fail=1
+          exit $fail
+
       # An SSI flash on the controller's own bus.  The pin numbers in the YAML
       # do not route it -- the BSP decides which pads GPSPI2 reaches -- so this
       # is the controller, the driver and ESPHome's stack end to end.

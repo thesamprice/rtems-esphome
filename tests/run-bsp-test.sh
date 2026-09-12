@@ -35,14 +35,31 @@ mkdir -p "$OUT"
 [ -x "$PREFIX/bin/riscv-rtems7-gcc" ] || { echo "no toolchain at $PREFIX" >&2; exit 2; }
 [ -x "$QEMU" ] || { echo "no esp32c3 qemu at $QEMU (scripts/build_esp_qemu.sh)" >&2; exit 2; }
 
-# Stage the BSP so the test links the way an application would, against
-# installed headers and libraries rather than against the build tree.
-stage=$OUT/stage
-rm -rf "$stage"
-( cd "$top/src/rtems" && ./waf --out="$BUILD" install --destdir="$stage" ) > "$OUT/install.log" 2>&1
-
-lib=$(find "$stage" -type d -name lib -path '*esp32c3db*' | head -1)
-[ -n "$lib" ] || { echo "staged BSP not found under $stage" >&2; exit 1; }
+# Where to link against, and the choice matters.
+#
+# With a build tree present -- a developer's checkout -- stage it to a scratch
+# destdir and link against that, so the test always sees the BSP in this tree
+# rather than whatever was last installed.  Getting that wrong is not
+# hypothetical: the prefix here once held a librtemsbsp.a from before the pin
+# arbitration, and every lane linked it and passed while testing nothing of the
+# kind.
+#
+# Without one -- CI, where the image ships a built BSP and src/rtems is not
+# even checked out -- link against the installed prefix, which is the artifact
+# under test there.
+if [ -d "$BUILD" ] && [ -x "$top/src/rtems/waf" ]; then
+  stage=$OUT/stage
+  rm -rf "$stage"
+  ( cd "$top/src/rtems" && ./waf --out="$BUILD" install --destdir="$stage" ) > "$OUT/install.log" 2>&1
+  lib=$(find "$stage" -type d -name lib -path '*esp32c3db*' | head -1)
+  [ -n "$lib" ] || { echo "staged BSP not found under $stage" >&2; exit 1; }
+  echo "linking against the tree in $BUILD"
+else
+  lib=$PREFIX/riscv-rtems7/esp32c3db/lib
+  [ -d "$lib/include/bsp" ] || {
+    echo "no BSP at $lib and no build tree at $BUILD" >&2; exit 2; }
+  echo "linking against the installed BSP at $lib"
+fi
 
 "$PREFIX/bin/riscv-rtems7-gcc" -march=rv32imc -mabi=ilp32 \
   -isystem "$lib/include" -B "$lib" -qrtems -Wl,--gc-sections \

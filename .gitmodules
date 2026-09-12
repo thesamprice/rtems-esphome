@@ -191,3 +191,20 @@
 	url = https://github.com/bblanchon/ArduinoJson.git
 	branch = v7.4.3
 	update = none
+[submodule "src/esp32-wifi-lib"]
+	path = src/esp32-wifi-lib
+	url = git@github.com:thesamprice/esp32-wifi-lib.git
+[submodule "src/esp-phy-lib"]
+	path = src/esp-phy-lib
+	url = git@github.com:thesamprice/esp-phy-lib.git
+[submodule "src/mbedtls"]
+	path = src/mbedtls
+	url = git@github.com:thesamprice/mbedtls.git
+[submodule "src/esp-hal-3rdparty"]
+	path = src/esp-hal-3rdparty
+	url = git@github.com:thesamprice/esp-hal-3rdparty.git
+	branch = sync/master.c
+	shallow = true
+[submodule "src/rtems-esp-wifi"]
+	path = src/rtems-esp-wifi
+	url = https://gitlab.rtems.org/TheSamPrice/rtems-esp-wifi.git

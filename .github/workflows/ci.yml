@@ -159,6 +159,18 @@ jobs:
             tests/rtems-ci/.esphome/build/sensortest/sensortest.bin \
             -- -device tmp105,address=0x48,id=temp0
 
+      # An SSI flash on the controller's own bus.  The pin numbers in the YAML
+      # do not route it -- the BSP decides which pads GPSPI2 reaches -- so this
+      # is the controller, the driver and ESPHome's stack end to end.
+      - name: Run the SPI lane
+        run: |
+          dd if=/dev/zero of=/tmp/spiflash.img bs=1048576 count=2 2>/dev/null
+          tools/rtems-ci-run.sh -o rtems-results/spi -t 120 \
+            -M "CI-MARKER spi ok" \
+            tests/rtems-ci/.esphome/build/spitest/spitest.bin \
+            -- -drive file=/tmp/spiflash.img,if=none,format=raw,id=sf0 \
+               -device is25lp016d,bus=gpspi2,drive=sf0
+
       # The far end of UART1 echoes upper-cased, so a port that loops TX back to
       # RX internally -- a real fault -- cannot pass by returning the guest its
       # own bytes.

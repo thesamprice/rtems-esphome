@@ -1,0 +1,32 @@
+# Reads a real SPI device through ESPHome's own SPI stack.
+#
+# The pin numbers here are required by the schema but do not route the bus:
+# which pads GPSPI2 reaches is fixed when the BSP is built, and the driver
+# claims GPIO0, 1, 3 and 4 through <bsp/pin.h>.  They are written to match, so
+# the configuration does not describe something different from what runs.
+#
+# QEMU supplies the slave:
+#
+#     -device is25lp016d,bus=gpspi2,drive=<file>
+
+esphome:
+  name: spitest
+  includes:
+    - spi_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_spi_test::run(id(bus));"
+
+rtems:
+  bsp: riscv/esp32c3db
+
+logger:
+  level: DEBUG
+
+spi:
+  id: bus
+  interface: hardware
+  clk_pin: 0
+  mosi_pin: 1
+  miso_pin: 3

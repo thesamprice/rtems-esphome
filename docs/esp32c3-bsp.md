@@ -321,7 +321,19 @@ can see what the others took:
 | 18, 19 | USB D− / D+ |
 | 20, 21 | UART0, which is the console |
 
-Leaving **0, 1, 3, 4, 11** for an application.
+Leaving **0, 1, 3, 4, 11** — of which SPI takes four:
+
+| pins | taken by |
+|---|---|
+| 0, 1, 3, 4 | GPSPI2 — CLK, MOSI, MISO, CS0 |
+
+so **11** is what is left once every bus this BSP offers is registered.
+
+GPSPI2's own IO_MUX defaults are GPIO6, 7, 2 and 10, and all four are
+already spoken for — 6 is I²C SCL, 7 and 10 are UART1, 2 is strapping — so
+the driver routes it through the GPIO matrix instead. That is what the
+matrix is for, and it is why the defaults being unavailable is an
+inconvenience rather than a blocker.
 
 That table has been wrong once already, which is the point of this section.
 It previously listed 7 and 10 as free, because it was written before the UART

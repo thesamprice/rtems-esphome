@@ -114,6 +114,7 @@ jobs:
           ../../.venv/bin/esphome compile uart.yaml
           ../../.venv/bin/esphome compile sensor.yaml
           ../../.venv/bin/esphome compile spi.yaml
+          ../../.venv/bin/esphome compile opendrain.yaml
       - name: Run the reference node
         run: |
           tools/rtems-ci-run.sh -o rtems-results/reference \
@@ -184,6 +185,16 @@ jobs:
             -drive file=/tmp/spiflash.img,if=none,format=raw,id=sf1 \
             -device is25lp016d,bus=gpspi2,drive=sf1 || fail=1
           exit $fail
+
+      # Two pads tied on one net, which is the only way open drain means
+      # anything: the property is that one holding low wins over another
+      # releasing, and a single driver cannot show it.
+      - name: Run the open-drain lane
+        run: |
+          tools/rtems-ci-run.sh -o rtems-results/opendrain -t 120 \
+            -M "CI-MARKER opendrain ok" \
+            tests/rtems-ci/.esphome/build/odtest/odtest.bin \
+            -- -global driver=esp32c3.gpio,property=wire,value=0x801
 
       # An SSI flash on the controller's own bus.  The pin numbers in the YAML
       # do not route it -- the BSP decides which pads GPSPI2 reaches -- so this

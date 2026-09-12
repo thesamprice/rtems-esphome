@@ -1,0 +1,56 @@
+# Two open-drain pins on one net. See opendrain_test.h for what it proves.
+#
+# QEMU ties the pads together:
+#
+#     -global driver=esp32c3.gpio,property=wire,value=0x801
+#
+# 0x801 is GPIO0 and GPIO11 -- the two pads left free once strapping, the
+# flash, USB, UART0, UART1, I2C and SPI are accounted for. docs/esp32c3-bsp.md
+# has that list.
+
+esphome:
+  name: odtest
+  includes:
+    - opendrain_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_od_test::run(id(pin_a), id(pin_b), id(pin_c));"
+
+rtems:
+  bsp: riscv/esp32c3db
+
+logger:
+  level: DEBUG
+
+# Declared as pins so codegen builds real GPIOPin objects; the lambda drives
+# them through the interface rather than through any RTEMS call.
+output:
+  - platform: gpio
+    id: out_a
+    pin:
+      id: pin_a
+      number: 0
+      mode:
+        output: true
+        open_drain: true
+        pullup: true
+  # Open drain with no pull resistor, on its own net: released means nothing
+  # drives it, which a push-pull output cannot do.
+  - platform: gpio
+    id: out_c
+    pin:
+      id: pin_c
+      number: 1
+      mode:
+        output: true
+        open_drain: true
+  - platform: gpio
+    id: out_b
+    pin:
+      id: pin_b
+      number: 11
+      mode:
+        output: true
+        open_drain: true
+        pullup: true

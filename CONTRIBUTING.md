@@ -154,3 +154,40 @@ measurement**. Four habits catch it.
 
 Run timing assertions both with and without `-icount` (#47): each hides a
 different class of bug.
+
+### The same rule for anything that reports a number
+
+A probe, an audit, a footprint report, a symbol count. These have a failure
+mode the tests above do not: a test that does not run is usually obvious,
+whereas **a measurement that did not run looks like a good result.**
+
+Four cases turned up while bringing the WiFi libraries up:
+
+* A symbol-closure probe reported **zero unresolved symbols** twice, because
+  `ld` had died on its first argument. Once from a wrong working directory,
+  once because the guard listing the inputs was maintained separately from the
+  link line and had gone stale when an object was added — the separate list was
+  itself the bug.
+* Three linker-script arrangements linked cleanly and placed nothing. Each
+  looked like "still broken, try the next idea" rather than "that idea never
+  ran", because the symptom was the same overflow as before.
+* `scripts/footprint.py` printed `not an ELF file` and exited **0**, so a CI
+  step measuring a half-written artefact would have passed.
+* A linker fragment was "confirmed" against a test program that contained none
+  of the sections it placed.
+
+So, in addition to the four habits above:
+
+5. **"Nothing found" and "could not look" must differ, in output and in exit
+   status.** An empty result is only credible where the thing counted can
+   genuinely be zero. `scripts/audit_platform_deps.py` refuses to write a
+   report of zeros, because ESPHome's tree cannot be free of platform
+   dependencies — zero hits means the scan did not run.
+6. **Derive the list of inputs to check from what the measurement actually
+   uses**, never maintain it alongside.
+7. **Assert addresses and identities, not only outcomes.** `tests/bsp-iram` is
+   the model: it does not merely call a function in `.fast_text`, it asserts
+   the function's address is in the instruction window and its load address is
+   in flash. The behavioural check alone passes with the section unplaced.
+8. **A control has to contain the thing under test.** A passing control over an
+   input the change cannot affect is not a negative control.

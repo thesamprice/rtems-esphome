@@ -298,7 +298,23 @@ def main():
     top = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(top)
 
+    if not os.path.isdir(args.tree):
+        sys.exit(f"{args.tree} is not a directory; is --tree right, "
+                 "and is the submodule checked out?")
+
     hits = scan(args.tree)
+
+    # Refuse to report zero hits.
+    #
+    # ESPHome's tree unavoidably contains platform dependencies -- finding none
+    # means the scan did not run, not that the tree is clean.  Without this, a
+    # stale --tree or an unchecked-out submodule wrote a report full of zeros
+    # and said nothing was wrong, and under --check the same emptiness on both
+    # sides would eventually agree.
+    if not hits:
+        sys.exit(f"no platform dependencies found under {args.tree}; that "
+                 "cannot be right, so refusing to write a report of zeros")
+
     buckets, families, core_files = summarise(hits)
 
     rev = ""

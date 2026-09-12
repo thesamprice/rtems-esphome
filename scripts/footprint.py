@@ -140,11 +140,18 @@ def main():
         ap.error("name an ELF, or pass --find")
 
     out = {}
+    failed = []
     for p in paths:
         try:
             arch, secs = sections(p)
-        except ValueError as exc:
-            print(exc, file=sys.stderr)
+        except (ValueError, struct.error, OSError) as exc:
+            # struct.error and OSError as well as ValueError.  A truncated ELF
+            # raises struct.error from deep inside sections() and a missing
+            # file raises OSError, and neither was caught: both escaped as a
+            # traceback.  That at least exited non-zero; the ValueError path
+            # did not, which is the defect this replaces.
+            print(f"footprint: {exc}", file=sys.stderr)
+            failed.append(p)
             continue
         flash, demand, residual = classify(secs)
         if args.json:
@@ -163,6 +170,22 @@ def main():
     if args.json:
         print(json.dumps(out, indent=2, sort_keys=True))
 
+    # Exit non-zero if any named input could not be read.
+    #
+    # It used to print the reason and carry on with status 0, which meant a CI
+    # step measuring a broken or half-written artefact *passed*.  An empty file
+    # was the clearest case: "not an ELF file" on stderr, exit 0, green build.
+    #
+    # It matters most under --json, where the consumer sees a smaller object
+    # rather than an error, and a report that silently lost a lane looks like a
+    # lane that simply got smaller.
+    if failed:
+        print(f"footprint: {len(failed)} of {len(paths)} input(s) could not be read",
+              file=sys.stderr)
+        return 1
+
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -199,11 +199,29 @@ def main():
     a = ap.parse_args()
 
     cdir = os.path.join(a.tree, "esphome", "components")
+
+    if not os.path.isdir(cdir):
+        sys.exit(f"{cdir} is not a directory; is --tree right, "
+                 "and is the submodule checked out?")
+
+    if not os.path.exists(a.esphome):
+        sys.exit(f"{a.esphome} does not exist; is the venv built?")
+
     names = a.names or sorted(
         c for c in os.listdir(cdir)
         if os.path.isdir(os.path.join(cdir, c))
         and os.path.exists(os.path.join(cdir, c, "__init__.py"))
     )
+
+    # Refuse to audit nothing.
+    #
+    # With an empty name list every count is zero, no component is unclear, and
+    # the script printed a table of zeros and returned 0 -- a green audit that
+    # audited nothing.  An unchecked-out submodule or a stale --tree was enough
+    # to produce it, and there was no way to tell that report from a clean one.
+    if not names:
+        sys.exit(f"no components found under {cdir}; refusing to report an "
+                 "audit of nothing")
 
     results = {}
     with tempfile.TemporaryDirectory() as tmp:

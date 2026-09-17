@@ -110,20 +110,25 @@ records, and fails if a fetched submodule has drifted off its pin.
 | `src/mbedtls` | crypto for the WPA supplicant |
 | `src/osal` | NASA OSAL — a selective building block, see `docs/architecture.md` |
 | `src/ArduinoJson` | header-only, needed by esphome's `json` component |
+| `src/micropython` | the MicroPython RTEMS port, branch `rtems-networking` |
 
-**`src/micropython` is not a submodule** (issue **#125**). Clone it by hand
-from the fork, branch `rtems-networking`:
+`src/micropython` is a submodule like the rest, pinned and fetched the same
+way:
 
 ```sh
-git clone -b rtems-networking \
-    https://github.com/thesamprice/micropython.git src/micropython
+git submodule update --init --checkout --depth=1 src/micropython
 ```
 
-The same branch is also on gitlab.rtems.org as `TheSamPrice/micropython`; the
-two are the same commits. `thesamprice/micropython#1` is a pull request from
-that branch onto `rtems-port-base` (the tip of the pre-existing RTEMS port)
-purely so the delta is reviewable in one place -- seven commits, 14 files,
-+2289/-8. It is not proposed upstream and is not meant to be merged.
+It carries the MicroPython RTEMS port. `ports/rtems` itself predates this
+project; branch `rtems-networking` adds sockets, `network.WLAN` and the
+ESP32-C3 WiFi example on top of it. `thesamprice/micropython#1` is a pull
+request from that branch onto `rtems-port-base` -- the tip of the pre-existing
+port -- opened purely so the delta is reviewable in one place: seven commits,
+14 files, +2289/-8. It is not proposed upstream.
+
+The same branch is also on gitlab.rtems.org as `TheSamPrice/micropython`. The
+submodule points at GitHub because the gitlab remote is behind an access
+token, and a URL with a credential in it does not belong in a tracked file.
 
 ## Building the toolchain
 
@@ -508,8 +513,12 @@ reads as "interrupts are disabled" rather than "not read". MIE is bit 3 of
 is in the tree; the C examples are not, the per-object glue scripts name a stale
 prefix, and nothing populates a fresh `$SP` end to end.
 
-**#125 — `src/micropython` is not a submodule.** Cloned by hand from the fork,
-branch `rtems-networking`, with nothing checking its revision.
+**`src/rtems-esp-wifi` has commits that are on no remote.** The superproject
+pins an older revision than the one checked out, so `scripts/manifest.sh`
+reports MISMATCH, and a clean clone would get a glue checkout without the
+memcpy fix or the task-creation diagnostics. This is #125's problem in a second
+repository and is not yet filed. (`src/rtems` also reports MISMATCH, but that
+one is expected: the pin is upstream and `patches/rtems/` is applied on top.)
 
 **#121 — the GC heap must be 12 KiB.** `-DMP_HEAP_SIZE=12288`. 24 KiB leaves
 ~2 KB of C heap and the radio fails with `ESP_ERR_NO_MEM`, reported as an empty

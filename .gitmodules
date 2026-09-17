@@ -208,3 +208,23 @@
 [submodule "src/rtems-esp-wifi"]
 	path = src/rtems-esp-wifi
 	url = https://gitlab.rtems.org/TheSamPrice/rtems-esp-wifi.git
+[submodule "src/micropython"]
+	path = src/micropython
+	# MicroPython, forked so the RTEMS port is commits rather than a patch set.
+	# The port predates this project -- ports/rtems is another contributor's
+	# work -- and branch "rtems-networking" carries sockets, network.WLAN and
+	# the ESP32-C3 WiFi example on top of it.
+	#
+	# It is what demonstrates the WiFi stack from something other than a C test:
+	# the example scans, joins a WPA2-PSK network, takes a DHCP lease and opens
+	# a socket, all from Python, with C doing only the parts that cannot be a
+	# choice.  Until this entry existed a clean clone could not build any of it
+	# and nothing recorded which revision the rest of the tree was tested
+	# against.
+	#
+	# GitHub rather than gitlab.rtems.org because the gitlab remote is behind a
+	# token: a URL with a credential in it does not belong in a tracked file.
+	# The same branch is on both and thesamprice/micropython#1 shows the delta.
+	url = https://github.com/thesamprice/micropython.git
+	branch = rtems-networking
+	update = none

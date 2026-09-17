@@ -3,9 +3,9 @@
 Running [ESPHome](https://esphome.io) on [RTEMS](https://www.rtems.org),
 starting from the ESP32-C3.
 
-This is early. What exists today is a working, reproducible foundation — RTEMS
-boots on the ESP32-C3 under emulation and passes most of its own testsuite —
-plus the fixes it took to get there. ESPHome itself is not running yet.
+ESPHome runs on RTEMS on the ESP32-C3 under emulation, and the WiFi radio now
+works on real hardware. The two have not been joined yet: no ESPHome image has
+been run on a board with a network.
 
 - [`docs/architecture.md`](docs/architecture.md) — the standing decisions: what
   NASA OSAL is and is not used for, why networking goes straight to BSD sockets,
@@ -30,6 +30,8 @@ is somewhere to run it without hardware in the loop.
 | Boots under QEMU | ROM direct boot, console on UART0 |
 | Clock, interrupts | working — after the QEMU fix below |
 | Testsuite | 420 pass, 14 xfail, 25 fail of 459 |
+| **ESPHome under QEMU** | nine configurations in CI: reference-node, primitives, scheduler, gpio, i2c, spi, uart, opendrain, sensor |
+| **WiFi on real hardware** | scan, WPA2-PSK association, DHCP lease, socket — driven from MicroPython |
 
 Nothing in the failures is unexplained. 24 are the part being small — 320 KiB
 of RAM is not enough for the filesystem tests to allocate a RAM disk — and
@@ -37,7 +39,12 @@ of RAM is not enough for the filesystem tests to allocate a RAM disk — and
 full breakdown, including three readings of these numbers that were confidently
 wrong before they were right.
 
-Nothing is running on real silicon yet. Everything above is QEMU.
+The testsuite numbers above are QEMU. The WiFi row is a board: an
+ESP32-C3-DevKitM associating with a WPA2-PSK access point and holding a DHCP
+lease. `docs/handoff.md` is the route from a clean clone to that result, and
+`docs/esp32c3-jtag-debugging.md` is how to halt the board when it stops.
+
+What remains is the join: ESPHome on the board, over that radio.
 
 ## What it took
 

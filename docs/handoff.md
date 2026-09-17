@@ -36,9 +36,26 @@ refuses — QEMU's `esp32c3` machine has **no WiFi MAC model** (#102), so no
 frame can move and nothing can associate. Association, DHCP and traffic are
 hardware-only questions.
 
-ESPHome itself is not yet running on RTEMS. What is proven is the layer below
-it. `README.md` is stale: it predates the WiFi work and says nothing runs on
-silicon.
+**ESPHome runs on RTEMS.** That is easy to miss from this document, which is
+about the WiFi lane, so it is worth stating plainly. CI builds and runs nine
+ESPHome configurations for `riscv/esp32c3db` under QEMU on every push --
+`reference-node`, `primitives` (both with icount and in real time),
+`scheduler` (both ways), `gpio`, `i2c`, `spi`, `uart`, `opendrain` and
+`sensor` -- through `tools/rtems-ci-run.sh`, with an ESP-IDF build of the same
+configuration as the A side of an A/B (`tests/esp-idf-ci/`). The configs and
+their assertion headers are in `tests/rtems-ci/`.
+
+There is a second lane in the same directory, the `zynq-*.yaml` configs on
+`arm/xilinx_zynq_a9_qemu`, covering the native API, mDNS, MQTT, preferences,
+sockets and threads. Those are run by hand rather than in CI.
+
+What is **not** done is ESPHome on real silicon over WiFi. The radio, the
+netif and the supplicant now work on a board, and MicroPython drives them end
+to end, but no ESPHome image has been run on hardware with a network. That is
+the join this WiFi lane exists to make, and it is the next thing to attempt.
+
+`README.md` is stale on both counts: it says ESPHome is not running and that
+nothing runs on real silicon, and neither is true any more.
 
 | file | what it covers |
 |---|---|

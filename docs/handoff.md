@@ -499,6 +499,33 @@ Most of the ways this fails look like something else. Keyed by what you see:
 | `waiting for download` and a silent console | the EN reset landed in the ROM loader | about one reset in four; retry, or use the sampler which retries for you |
 | OpenOCD: `IN buffer overflow!` or a garbage IDCODE | wedged JTAG endpoint from a killed OpenOCD | `tools/esp32c3-usbjtag-drain.py` |
 | build stops at a missing `.o` or `no pkg-config file` | work directory not staged, or BSP built but not installed | `tools/stage-esp32c3-workdir.sh` prints the exact command |
+| banner repeats every ~1.5 s, and esptool then says `device disconnected or multiple access on port` | a bad flash, boot-looping | see below -- the loop is what stops you reflashing |
+
+### A boot loop makes the board unflashable
+
+Worth its own paragraph because the obvious reading is wrong. On a board whose
+console is the chip's own USB-Serial-JTAG, a boot loop re-enumerates the USB
+device every cycle, so esptool cannot hold a connection long enough to write
+anything and reports a hardware or driver problem. It is neither: the firmware
+is restarting under it.
+
+Break the loop first by parking the chip in the ROM loader, then write with the
+reset suppressed so it stays there:
+
+```sh
+esptool --port /dev/cu.usbmodem2101 --after no_reset --connect-attempts 5 chip-id
+esptool --port /dev/cu.usbmodem2101 --before no_reset --after hard_reset \
+    --connect-attempts 5 write_flash 0x0 $SP/mpwifi-out/flash.bin
+```
+
+The first command may need two or three goes -- it is racing the same
+re-enumeration. Once it prints a MAC the chip is held and the write is
+ordinary.
+
+A repeating banner is not always the watchdog. An image that ran perfectly an
+hour earlier and now loops is far more likely to be a flash that did not fully
+verify; reflash before going looking for a regression. That is exactly what
+happened here, and the wrong guess cost a while.
 
 The two that cost the most time here were the third and the sixth, because
 neither names itself: an empty scan is a memory error, and a task that never
@@ -561,6 +588,7 @@ RTEMS_BUILD=src/rtems/build-esp32c3db/riscv/esp32c3db tools/esp32c3-run-tests.sh
 | `tools/rtems-ci-run.sh` | runs one ESPHome/RTEMS image under QEMU and reports PASS or FAIL |
 | `tools/esp-idf-ci-run.sh` | the same for an ESPHome/ESP-IDF firmware — the reference lane that catches breakage in common ESPHome code |
 | `tools/esp32c3-usbjtag-drain.py` | clears the C3's USB-JTAG IN endpoint after a SIGKILLed OpenOCD wedged it |
+| `tools/esp32c3-capture.py` | reset over EN and print the console with timestamps, retrying a reset that lands in the ROM loader |
 | `tools/esp32c3-sample-hung.py` | poor man's profiler: resets over EN, waits for the console to go quiet, then halts repeatedly and symbolizes the PC |
 | `tools/qmp-preboot.py` | sends QMP commands to a paused QEMU, then releases the guest — for device state the command line cannot set |
 | `scripts/manifest.sh` | what is checked out vs what `.gitmodules` records |

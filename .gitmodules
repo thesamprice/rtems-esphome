@@ -207,7 +207,17 @@
 	shallow = true
 [submodule "src/rtems-esp-wifi"]
 	path = src/rtems-esp-wifi
-	url = https://gitlab.rtems.org/TheSamPrice/rtems-esp-wifi.git
+	# The RTEMS/Espressif WiFi glue: the OS adapter table, PHY and clock
+	# bring-up, the event task, and an lwIP netif over esp_wifi_internal_tx().
+	#
+	# GitHub, because the pin below is a commit that exists there and not on
+	# gitlab.rtems.org.  Both remotes are the same project; the GitHub one is
+	# ahead, and a pin a clean clone cannot resolve is worse than a mirror
+	# nobody reads.  thesamprice/rtems-esp-wifi#1 shows what changed since the
+	# revision this file used to record.
+	url = https://github.com/thesamprice/rtems-esp-wifi.git
+	branch = main
+	update = none
 [submodule "src/micropython"]
 	path = src/micropython
 	# MicroPython, forked so the RTEMS port is commits rather than a patch set.

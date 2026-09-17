@@ -5,10 +5,12 @@ could not be reconstructed from the repository it says so instead of guessing.
 
 **Read this first.** There is no build system. The working procedure is shell
 scripts that stage a work directory by hand, compile objects one at a time and
-link them with an explicit command line. One is now committed
-(`tools/build-esp32c3-micropython.sh`); the C examples still build from their
-own scripts under `src/rtems-esp-wifi/examples/`. That is issue **#100**, only
-partly addressed. Expect to read the scripts, not just run them.
+link them with an explicit command line. Two are now committed
+(`tools/stage-esp32c3-workdir.sh`, which fills a fresh work directory, and
+`tools/build-esp32c3-micropython.sh`, which links the image); the C examples
+still build from their own scripts under `src/rtems-esp-wifi/examples/`. That
+is issue **#100**, only partly addressed. Expect to read the scripts, not just
+run them.
 
 ## What this is
 
@@ -104,6 +106,7 @@ records, and fails if a fetched submodule has drifted off its pin.
 | `src/rtems-lwip` | the network stack (chosen over libbsd in #50: 391 files vs 5,602) |
 | `src/rtems-libbsd` | kept for comparison, not used — 2.6M lines on a 320 KiB part |
 | `src/rtems-esp-wifi` | the RTEMS↔Espressif WiFi glue, netif and examples |
+| `src/esp-qemu` pins | `esp32c3-rtems-fixes`; see thesamprice/qemu#1 for what it changes |
 | `src/esp-hal-3rdparty` | Espressif's HAL sources, branch `sync/master.c` |
 | `src/esp32-wifi-lib` | the eight WiFi binary blobs for `esp32c3/` |
 | `src/esp-phy-lib` | the PHY blob |
@@ -214,7 +217,22 @@ rebuilding lwIP against the USB one would produce the same archive.
 ## Staging the rest of the work directory
 
 `$SP` must also hold the glue checkout, the HAL, the blobs and about eight
-compiled objects before either example will link:
+compiled objects before either example will link. One command does all of it:
+
+```sh
+SP=$HOME/build/c3 tools/stage-esp32c3-workdir.sh
+```
+
+It stops, naming the command you need, if a submodule, either BSP prefix or
+`liblwip.a` is missing; otherwise it stages the two copies and the blobs,
+compiles the eight objects, builds `libwpa.a` and `libmbedtls.a`, and freezes
+`wifi.py` into `$SP/mpwifi/pywifi.c`. Re-running is cheap: the archives are
+rebuilt only when a source is newer than them, and `RESTAGE=1` forces them.
+It does not build the BSPs, rtems-lwip or `libmicropython.a` — those are long
+builds in other trees with options a staging script should not choose for you,
+so it checks for them and prints the exact invocation instead.
+
+The rest of this section is what that script does, for doing it by hand:
 
 ```sh
 cp -R src/rtems-esp-wifi     "$SP/glue"
@@ -238,11 +256,15 @@ objects) and `libmbedtls.a` (62). There is no script for `adapter.o`
 `esp_wifi`, `esp_common`, `esp_event`, `esp_hw_support`, `soc` and `esp_rom`
 include paths.
 
-> **Open question.** Nothing populates a fresh `$SP` end to end, and those
-> per-object scripts still point at an older `$SP/iram-prefix` rather than
-> `$SP/usb-prefix`. They have to be run one at a time with the prefix
-> corrected. This is the sharpest edge of #100 and the most likely place for a
-> newcomer to stop.
+Those per-object scripts still point at an older `$SP/iram-prefix`, so running
+them directly fails. `tools/stage-esp32c3-workdir.sh` carries the corrected
+compiles rather than editing them, because they are in a separate repository
+(#100, and the `src/rtems-esp-wifi` pin note under "Known rough edges").
+The prefix to correct them to is `$SP/wifi-prefix`: that is the one lwIP is
+installed into and the one the C examples link against, and for these eight
+objects it makes no difference — the two `bspopts.h` differ only in
+`ESPRESSIF_USE_USB_CONSOLE`, which none of these sources reads, and compiling
+`adapter.o` against each prefix gives byte-identical objects.
 
 ## Building and flashing the C WiFi example
 
@@ -509,16 +531,25 @@ reads as "interrupts are disabled" rather than "not read". MIE is bit 3 of
 
 ## Known rough edges
 
-**#100 — no build system.** Shell scripts staging a work directory by hand. One
-is in the tree; the C examples are not, the per-object glue scripts name a stale
-prefix, and nothing populates a fresh `$SP` end to end.
+**#100 — no build system.** Shell scripts staging a work directory by hand.
+Two are in the tree — `tools/stage-esp32c3-workdir.sh` fills a fresh `$SP` end
+to end and `tools/build-esp32c3-micropython.sh` links the image — but the C
+examples' scripts are not, the per-object scripts in `src/rtems-esp-wifi/tools/`
+still name a stale `iram-prefix` (the staging script carries corrected copies
+rather than editing another repository), and there is still no dependency
+tracking: the staging script rebuilds the eight objects every run and decides
+the two archives on mtime alone.
 
-**`src/rtems-esp-wifi` has commits that are on no remote.** The superproject
-pins an older revision than the one checked out, so `scripts/manifest.sh`
-reports MISMATCH, and a clean clone would get a glue checkout without the
-memcpy fix or the task-creation diagnostics. This is #125's problem in a second
-repository and is not yet filed. (`src/rtems` also reports MISMATCH, but that
-one is expected: the pin is upstream and `patches/rtems/` is applied on top.)
+**`src/rtems` reports MISMATCH, and that one is expected.** The pin is upstream
+and `patches/rtems/` is applied on top of it, so a checkout that has had
+`scripts/apply_patches.sh` run will always sit one commit ahead. It is the only
+MISMATCH `scripts/manifest.sh` should report; any other means a pin is stale.
+
+The reason RTEMS changes are carried as patch files at all is that the
+submodule is a shallow clone -- two commits -- so it cannot take a pushed
+branch. That is a workaround for the clone depth rather than a preference, and
+it would go away if the submodule were unshallowed and mirrored the way the
+others now are.
 
 **#121 — the GC heap must be 12 KiB.** `-DMP_HEAP_SIZE=12288`. 24 KiB leaves
 ~2 KB of C heap and the radio fails with `ESP_ERR_NO_MEM`, reported as an empty

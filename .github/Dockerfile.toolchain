@@ -35,13 +35,12 @@ ENV PATH=/opt/rtems/7/bin:$PATH
 # builds and passes and is wrong in a way nothing downstream can see. Naming
 # the module makes a missing checkout an error instead.
 #
-# No -c pass afterwards.  That check reverse-applies each patch on its own,
-# which is only meaningful for patches that do not overlap: the esp32c3 driver
-# patches build on each other, so once all three are applied neither of the
-# first two reverses cleanly and the check reports a failure that is not one.
-# apply_patches.sh already exits non-zero unless every patch ended up applied,
-# which is the guarantee wanted here.
-RUN scripts/apply_patches.sh rtems rsb
+# Nothing to apply.  src/rtems and src/rsb are pinned at branches of forks that
+# already carry the changes as commits -- esp32c3-rtems-esphome on both -- so a
+# correct checkout is a correct tree.  This used to run apply_patches.sh over
+# patches/rtems and patches/rsb; both the script and the directories are gone,
+# because the stack could not be reversed and re-applied without silently
+# dropping the watchdog fix.
 
 # The RSB writes the actual compiler or configure error into a report file and
 # prints only "Build FAILED" on the console, so a failure here is undiagnosable

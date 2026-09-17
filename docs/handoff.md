@@ -92,6 +92,13 @@ used underscores, and this tree uses the hyphenated form. There is no
 `requirements.txt` — **open question**: the package list above is what the
 scripts actually invoke, not a pinned manifest recovered from the repo.
 
+## What it costs
+
+Before starting: the toolchain is tens of minutes of RSB, QEMU about ten more,
+and the two BSP prefixes several each. `$SP` holds a 132 MiB copy of the HAL
+plus two prefixes and several hundred objects, so allow a couple of GB outside
+the tree. Only the first of those is unavoidable more than once.
+
 ## Getting the source
 
 ```sh
@@ -99,7 +106,12 @@ git clone https://github.com/thesamprice/rtems-esphome
 cd rtems-esphome
 ```
 
-Every submodule is `update = none`, so a plain clone fetches **none** of them:
+Most submodules are `update = none`, so a plain clone fetches them only when
+asked. Four are not -- `src/esp32-wifi-lib`, `src/esp-phy-lib`, `src/mbedtls`
+and `src/esp-hal-3rdparty` -- and those four are also **ssh-only** in
+`.gitmodules`, with no https alternative. Without a GitHub key in your agent
+they fail at this first step, and the fix is either a key or editing the four
+urls to `https://github.com/...`.
 
 ```sh
 git submodule update --init --checkout --depth=1 \
@@ -172,8 +184,10 @@ untar one instead.
 
 ## Building the BSP
 
-The BSP is upstream RTEMS plus `patches/rtems/`, which add the GPIO, I2C and
-UART drivers and fix a chip header's install path and the systimer frequency.
+The BSP is `src/rtems` as checked out -- branch `esp32c3-rtems-esphome`, which
+adds the GPIO, I2C, UART and SPI drivers, pin arbitration, the IRAM region, the
+systimer frequency, interrupt source 0, the watchdog and the DRAM ceiling.
+There is nothing to apply.
 **Install, do not merely build**: the `.pc` file downstream reads is produced by
 `./waf install`, and a built-but-not-installed BSP fails later with "no
 pkg-config file", the least obvious symptom in this chain. Two prefixes are
@@ -376,20 +390,28 @@ tar -C "$SP/mpwifi" -cf "$SP/mpwifi/pywifi.tar" wifi.py
 rtems-bin2c "$SP/mpwifi/pywifi.tar" "$SP/mpwifi/pywifi.c"
 ```
 
-> **Open question.** That substitution is not automated anywhere: the
-> `ports/rtems/Makefile` has `pytest.c` and `pynet.c` rules but no `pywifi` one,
-> and no script in the tree generates `$SP/mpwifi/pywifi.c`. The three commands
-> above are reconstructed from the Makefile's own pattern and from the staged
-> file, which does have the placeholders replaced. Verify before relying on
-> them.
-
 Then the image. This is the one committed build script:
 
 ```sh
-SP=$HOME/build/c3 \
-EXTRA_CFLAGS='-DMP_HEAP_SIZE=12288 -DWIFI_NET_SSID="your-ssid" -DWIFI_NET_PASSWORD="your-passphrase"' \
+SP=$HOME/build/c3 EXTRA_CFLAGS='-DMP_HEAP_SIZE=12288' \
   ./tools/build-esp32c3-micropython.sh
 ```
+
+**The credentials do not go here.** `-DWIFI_NET_SSID` and `-DWIFI_NET_PASSWORD`
+are read by the *C* example and by nothing in the MicroPython one, which takes
+its network from `wifi.py`. That file ships `__SSID__` and `__KEY__`
+placeholders, and the staging script substitutes them:
+
+```sh
+SP=$HOME/build/c3 WIFI_SSID="your-ssid" WIFI_PASSWORD="your-passphrase" \
+  ./tools/stage-esp32c3-workdir.sh
+```
+
+Stage first, then build. Passing the `-D` flags to the build instead is not an
+error and produces no warning -- it produces an image that tries to join
+`rtems-esp`, the placeholder default, and reports only that it cannot find the
+network. The staging script prints a line when no `WIFI_SSID` was given; that
+line is the only warning you get.
 
 `REPO` defaults to the directory above the script, so it runs from anywhere in a
 clone; override it only for an out-of-tree source checkout. `SP` is required and
@@ -462,6 +484,26 @@ the heap-size symptom (#121) or the warm-reset symptom (#124), not as a radio
 that found nothing. `associated` means the four-way handshake completed through
 the supplicant; the lease proves frames moved both ways.
 
+## When it does not work
+
+Most of the ways this fails look like something else. Keyed by what you see:
+
+| symptom | cause | where |
+|---|---|---|
+| console prints **nothing**, board otherwise fine | wrong console option for your board | `ESPRESSIF_USE_USB_CONSOLE`; `hw-flash-and-run.sh` reports which port it found |
+| boots, then resets about 1.5 s in, forever | watchdog not actually disabled | the BSP branch carries the fix; check you are on `esp32c3-rtems-esphome` |
+| `0 access point(s)`, or `esp_wifi_set_config failed: 257` | out of C heap -- 257 is `ESP_ERR_NO_MEM` | GC heap too large (#121), or a warm reset (#124) |
+| same, but only after a software reset | radio does not survive `RTC_SW_SYS_RST` | reset over EN, never OpenOCD `reset halt` (#124) |
+| `connecting to 'rtems-esp'` | credentials never reached the image | `WIFI_SSID=` goes to the **staging** script, not the build |
+| associates, then nothing for a long time | was the `mp_hal_delay_ms` ABI bug, fixed in `eb033a2` | if it returns, halt the board and read the blocked thread's `expire` |
+| `waiting for download` and a silent console | the EN reset landed in the ROM loader | about one reset in four; retry, or use the sampler which retries for you |
+| OpenOCD: `IN buffer overflow!` or a garbage IDCODE | wedged JTAG endpoint from a killed OpenOCD | `tools/esp32c3-usbjtag-drain.py` |
+| build stops at a missing `.o` or `no pkg-config file` | work directory not staged, or BSP built but not installed | `tools/stage-esp32c3-workdir.sh` prints the exact command |
+
+The two that cost the most time here were the third and the sixth, because
+neither names itself: an empty scan is a memory error, and a task that never
+wakes had been told to sleep for 445 days.
+
 ## Running under QEMU
 
 Build the emulator once. `src/esp-qemu` carries both ESP32-C3 fixes as commits,
@@ -497,6 +539,15 @@ built against `$SP/wifi-prefix`, or the first character printed hangs the run.
 The testsuite runs under the same emulator:
 
 ```sh
+# Neither BSP prefix above contains the testsuite: both .ini files set
+# BUILD_TESTS = False.  A third configure is needed, and it is the one
+# docs/esp32c3-bsp.md uses:
+cd src/rtems
+./waf configure -o build-esp32c3db --rtems-config=config_esp32c3db.ini \
+    --rtems-tools=$HOME/rtems/7
+./waf build -o build-esp32c3db
+cd ../..
+
 RTEMS_BUILD=src/rtems/build-esp32c3db/riscv/esp32c3db tools/esp32c3-run-tests.sh
 ```
 
@@ -504,6 +555,7 @@ RTEMS_BUILD=src/rtems/build-esp32c3db/riscv/esp32c3db tools/esp32c3-run-tests.sh
 
 | tool | what it is for |
 |---|---|
+| `tools/stage-esp32c3-workdir.sh` | fills a fresh `$SP`: objects, archives, blobs, and the frozen `wifi.py` with your credentials |
 | `tools/build-esp32c3-micropython.sh` | builds the MicroPython WiFi image into `$SP/mpwifi-out/` |
 | `tools/esp32c3-run-tests.sh` | unattended RTEMS testsuite runner under QEMU, with a classified report |
 | `tools/rtems-ci-run.sh` | runs one ESPHome/RTEMS image under QEMU and reports PASS or FAIL |
@@ -556,41 +608,18 @@ rather than editing another repository), and there is still no dependency
 tracking: the staging script rebuilds the eight objects every run and decides
 the two archives on mtime alone.
 
-**No submodule should report MISMATCH.** Every one of them carries whatever
-this port needs as commits on a branch of a fork, pinned by `.gitmodules`, so
-a fresh checkout is clean and there is nothing to apply. A MISMATCH means a pin
-is stale -- someone committed to a submodule and did not move the superproject
-pin.
-
-This used to be a `patches/` directory applied over upstream pins, and it was
-removed rather than fixed. The stack stopped round-tripping: `apply_patches.sh`
-reversed in forward order and exited 0 over a half-reversed tree, which
-silently dropped the esp32c3 watchdog fix -- that does not fail the build, it
-boot-loops the board about a second and a half in. It was not a single bug
-(two patches carried the same hunk, three created files with the wrong `---`,
-and a superseded patch would have applied cleanly to a differently-restored
-tree), and per-patch checking cannot be made to work on a stack where later
-patches edit earlier patches' context. Patches are still the right format for
-*sending* work upstream: `git format-patch` from the branch.
-
-`scripts/check-patch-roundtrip.sh` is what holds that down. It reverses the
-stack, checks the checkout landed on its pin with nothing left over, re-applies
-it, and compares content before and after: a change that is in the tree but in
-no patch, or two patches carrying the same hunk, shows up and exits non-zero.
-Run it after adding or regenerating a patch. It mutates the checkout, so run it
-on a tree whose only local change is the patch stack.
-
-The reason RTEMS changes are carried as patch files at all is that the
-submodule is a shallow clone -- two commits -- so it cannot take a pushed
-branch. That is a workaround for the clone depth rather than a preference, and
-it would go away if the submodule were unshallowed and mirrored the way the
-others now are.
+**lwIP's pools were halved** on `src/rtems-lwip` branch `esp32c3-port`:
+`PBUF_POOL_SIZE` 24→12 and `MEM_SIZE` 32K→16K, recovering 36736 bytes. That
+changes the arithmetic below -- there is more C heap now than when the 12 KiB
+figure was measured. `wifi-net` prints and asserts `lwip_stats` for both pools;
+the successful-run capture above predates that and does not show those lines.
+The sizes are not proven under load (#129).
 
 **#121 — the GC heap must be 12 KiB.** `-DMP_HEAP_SIZE=12288`. 24 KiB leaves
 ~2 KB of C heap and the radio fails with `ESP_ERR_NO_MEM`, reported as an empty
 scan; 8 KiB starves Python. Narrow window, and the failure does not name itself.
 
-**#122 — DHCP takes a fixed ~6.8 s.** Every time, not occasionally, and the
+**#122 — DHCP took a fixed ~6.8 s** (also measured before `eb033a2`). Every time, not occasionally, and the
 figure is deterministic to within milliseconds across runs, which is what gives
 it away: it is lwIP's DISCOVER backoff, 2 s + 4 s, for two attempts that got no
 answer. The netif raises link-up on `WIFI_EVENT_STA_CONNECTED`, which fires at
@@ -598,7 +627,10 @@ answer. The netif raises link-up on `WIFI_EVENT_STA_CONNECTED`, which fires at
 hardware slots -- so the first two DISCOVERs go into a link that cannot carry
 encrypted data. Diagnosed, not yet fixed.
 
-**#123, #112 — association fails roughly one run in seven** with `AUTH_EXPIRE`.
+**#123, #112 — association failed roughly one run in seven.** Measured *before*
+the `mp_hal_delay_ms` ABI fix (`eb033a2`), which turned ten consecutive
+failures into four clean runs, so both numbers are owed a re-measurement
+before being trusted. Original note: with `AUTH_EXPIRE`.
 Retrying works. The same handshake as #122, failing rather than merely late, so
 the two are probably one fault at two severities. The RTEMS clock has been ruled
 out by measurement: 100 ticks/s, unchanged either side of the 40 MHz -> 160 MHz

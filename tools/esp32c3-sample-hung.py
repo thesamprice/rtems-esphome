@@ -123,6 +123,32 @@ def wait_for_port(timeout=30):
     sys.exit("%s never came back" % PORT)
 
 
+def start_openocd(attempts=3):
+    """Attach, retrying through a wedged endpoint.
+
+    An OpenOCD that did not exit cleanly leaves stale bytes queued in the
+    chip's JTAG IN FIFO, and the next one dies on them immediately.  Draining
+    between attempts is what clears it -- see docs/esp32c3-jtag-debugging.md.
+    """
+    for attempt in range(attempts):
+        oo = subprocess.Popen(
+            [OOCD] + (["-s", OOCD_S] if OOCD_S else []) +
+            ["-f", "board/esp32c3-builtin.cfg",
+             "-c", "riscv set_command_timeout_sec 20",
+             "-c", "init"],
+            stdout=open(SP + "/pmp-openocd.log", "w"), stderr=subprocess.STDOUT)
+        time.sleep(6)
+        if oo.poll() is None:
+            return oo
+        print("== openocd exited at once; draining and retrying (%d)" % (attempt + 1))
+        drain = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "esp32c3-usbjtag-drain.py")
+        subprocess.run([sys.executable, drain], capture_output=True)
+        wait_for_port()
+
+    sys.exit("openocd would not start; see pmp-openocd.log")
+
+
 def reset_into_the_app(ser, attempts=5):
     """Reset over EN, and make sure the chip came up running the image.
 
@@ -198,31 +224,24 @@ def main():
         else:
             last = snap[-1][0] if snap else triggered
             if time.time() - last >= QUIET:
-                print("== quiet for %.1fs -> attaching" % (time.time() - last))
+                print("== quiet for %.1fs (last output %.1fs after reset) -> attaching"
+                      % (time.time() - last, last - t0))
                 break
     else:
         print("== deadline hit; attaching anyway")
 
     print("== starting openocd (no reset)")
-    oo = subprocess.Popen(
-        [OOCD] + (["-s", OOCD_S] if OOCD_S else []) +
-        ["-f", "board/esp32c3-builtin.cfg",
-         "-c", "riscv set_command_timeout_sec 20",
-         "-c", "init"],
-        stdout=open(SP + "/pmp-openocd.log", "w"), stderr=subprocess.STDOUT)
-    time.sleep(6)
-    if oo.poll() is not None:
-        sys.exit("openocd died; see pmp-openocd.log")
-
+    oo = start_openocd()
     tcl = Tcl()
     print("== target:", tcl.cmd("targets").strip().splitlines()[-1].strip())
+
 
     syms = load_symtab()
     samples = []
     for i in range(SAMPLES):
         tcl.cmd("halt")
         regs = {}
-        for r in ("pc", "ra", "sp", "mcause", "mepc", "mstatus", "mie", "mip"):
+        for r in ("pc", "ra", "sp", "mcause", "mepc", "mstatus"):
             out = tcl.cmd("reg %s" % r)
             m = re.search(r"0x([0-9a-fA-F]+)", out)
             regs[r] = int(m.group(1), 16) if m else 0
@@ -250,8 +269,9 @@ def main():
         if rfn == "??" or rfn.startswith("??"):
             rfn = nearest(syms, s["ra"])
         print("  %2d  pc=0x%08x  %-42s %s" % (i, s["pc"], fn, loc))
-        print("      ra=0x%08x  %-42s sp=0x%08x mie=0x%08x mip=0x%08x mstatus=0x%08x"
-              % (s["ra"], rfn, s["sp"], s["mie"], s["mip"], s["mstatus"]))
+        print("      ra=0x%08x  %-42s sp=0x%08x mstatus=0x%08x%s"
+              % (s["ra"], rfn, s["sp"], s["mstatus"],
+                 "  MIE" if s["mstatus"] & 0x8 else "  mie=0"))
 
     print("\n===== PC HISTOGRAM =====")
     hist = {}

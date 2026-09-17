@@ -150,10 +150,16 @@
 	# tree -- both were at 1a7ccc63 when checked.  The lesson kept from that
 	# is that the mirror exists and is current, so an outage there is a
 	# detour and not a blocker; treating it as one cost #50 several sessions.
-	url = git@github.com:thesamprice/rtems-lwip.git
-	# The same over https, when there is no key on the machine:
-	#url = https://github.com/thesamprice/rtems-lwip.git
-	branch = rtems-esphome-integration
+	# Branch esp32c3-port, not rtems-esphome-integration: this is the
+	# ESP32-C3 lane, and it carries the BSP options sized for a part with
+	# 272 KiB of SRAM and no PSRAM.  The pbuf pool and lwIP heap were halved
+	# there to get 36736 bytes back, which is the difference between a
+	# working radio and ESP_ERR_NO_MEM reported as an empty scan.
+	# thesamprice/rtems-lwip#2 shows the delta.
+	url = https://github.com/thesamprice/rtems-lwip.git
+	# The same over ssh:
+	#url = git@github.com:thesamprice/rtems-lwip.git
+	branch = esp32c3-port
 	update = none
 
 [submodule "src/rtems-libbsd"]

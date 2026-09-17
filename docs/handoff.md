@@ -66,8 +66,18 @@ nothing runs on real silicon, and neither is true any more.
 
 ## Hardware and host prerequisites
 
-An ESP32-C3-DevKitM, or any ESP32-C3 board. Which USB the board presents
-decides one BSP option and nothing else:
+An ESP32-C3-DevKitM, or any ESP32-C3 board.
+
+**Find out which kind you have before building anything**, because it decides
+a BSP option and getting it wrong looks exactly like a dead board:
+
+```sh
+ls /dev/cu.*
+```
+
+`/dev/cu.usbmodem*` is the chip's own USB-Serial-JTAG -- no bridge IC.
+`/dev/cu.usbserial*` or `/dev/cu.SLAB*` is a bridge chip (CP210x, CH34x,
+FTDI) and the console is UART0. That one fact selects:
 
 * USB-to-UART bridge (CP210x, CH34x, FTDI) → `ESPRESSIF_USE_USB_CONSOLE = False`
 * native USB-Serial-JTAG, `/dev/cu.usbmodem*` → `ESPRESSIF_USE_USB_CONSOLE = True`
@@ -530,6 +540,20 @@ happened here, and the wrong guess cost a while.
 The two that cost the most time here were the third and the sixth, because
 neither names itself: an empty scan is a memory error, and a task that never
 wakes had been told to sleep for 445 days.
+
+## The other test lanes
+
+This guide is about the WiFi lane, and `tests/` holds three more that are not
+otherwise visible from it:
+
+| | |
+|---|---|
+| `tests/bsp-*/` | driver tests that assert **addresses**, not just behaviour -- `bsp-iram` proves a function links into the IRAM region and runs there, `bsp-irq0` that interrupt source 0 is usable, and so on. `tests/run-bsp-test.sh` runs one. |
+| `tests/rtems-ci/` | ESPHome configurations run on RTEMS, with their assertion headers. Nine of them are in CI; the `zynq-*.yaml` set is run by hand. |
+| `tests/esp-idf-ci/` | the same configurations built with ESP-IDF, as the A side of an A/B. A difference between the lanes is a difference between RTEMS and ESP-IDF rather than between two configs that merely look alike. |
+
+Keep the last two in step. A change to one that is not made to the other
+quietly turns the comparison into a comparison of something else.
 
 ## Running under QEMU
 

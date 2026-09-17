@@ -73,12 +73,31 @@
 
 [submodule "src/rtems"]
 	path = src/rtems
-	# RTEMS itself.  main IS the 7 development line; a release line gets a
+	# RTEMS, forked so the ESP32-C3 BSP work is commits rather than a patch
+	# set.  Upstream main IS the 7 development line; a release line gets a
 	# branch only once it is cut, so there is no "7".
-	url = https://gitlab.rtems.org/rtems/rtos/rtems.git
-	# Over ssh, which needs a key on gitlab.rtems.org port 2222:
-	#url = ssh://git@gitlab.rtems.org:2222/rtems/rtos/rtems.git
-	branch = main
+	#
+	# Branch esp32c3-rtems-esphome starts at the upstream revision this pin
+	# used to record and adds the GPIO, I2C, UART and GPSPI2 drivers, pin
+	# arbitration, the systimer frequency, interrupt source 0, the IRAM
+	# region, the watchdog and the DRAM ceiling.  thesamprice/rtems#3 shows
+	# the delta.
+	#
+	# These were patches/rtems/*.patch until the stack stopped round-tripping:
+	# apply_patches.sh reversed in forward order and exited 0 over a
+	# half-reversed tree, which silently dropped the watchdog fix -- a
+	# run-time failure on hardware, not a build error.  It was not one bug.
+	# Two patches carried the same hunk, three created files with a wrong
+	# ---, and a superseded patch would have applied cleanly to a
+	# differently-restored tree.  Per-patch checking cannot work on a stack
+	# where later patches edit earlier patches' context, so the format was
+	# wrong for carrying work.  It is still the right format for sending
+	# work upstream: git format-patch from this branch when something is
+	# ready for RTEMS.
+	url = https://github.com/thesamprice/rtems.git
+	# Upstream, to rebase against:
+	#url = https://gitlab.rtems.org/rtems/rtos/rtems.git
+	branch = esp32c3-rtems-esphome
 	update = none
 
 [submodule "src/rtems-lwip"]
@@ -162,12 +181,18 @@
 	# Building a toolchain takes tens of minutes, so CI caches the result on
 	# this pin; the pin is therefore what a cached toolchain is attributable to.
 	#
-	# Pinned at 105f43d299cb5c367fc5f2b0147f401721ed3d9c, which is the revision that
-	# built the riscv-rtems7 toolchain this port has been developed and tested
-	# against -- not whatever main happens to be, so the toolchain in CI is the
-	# one the results came from.
-	url = https://gitlab.rtems.org/rtems/tools/rtems-source-builder.git
-	branch = main
+	# Pinned on the branch above, whose base is 105f43d299cb5c367fc5f2b0147f401721ed3d9c
+	# -- the revision that built the riscv-rtems7 toolchain this port has been
+	# developed and tested against, not whatever upstream main happens to be, so
+	# the toolchain in CI is the one the results came from.
+	#
+	# Forked, so the one change this port needs -- dropping sis, a SPARC
+	# simulator, from the RISC-V bset -- is a commit rather than a patch file.
+	# thesamprice/rtems-source-builder#1 shows the delta.
+	url = https://github.com/thesamprice/rtems-source-builder.git
+	# Upstream, to rebase against:
+	#url = https://gitlab.rtems.org/rtems/tools/rtems-source-builder.git
+	branch = esp32c3-rtems-esphome
 	update = none
 
 [submodule "src/ArduinoJson"]

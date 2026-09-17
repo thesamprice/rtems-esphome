@@ -3,10 +3,13 @@
 Patches meant for a **different project's** upstream, kept here so they are not
 lost between being written and being sent.
 
-This is not `patches/`. That directory holds patches this build *applies* to a
-submodule in `src/`, and `scripts/apply_patches.sh` applies every one of them.
-Nothing here is applied to anything: these are submissions, and the copy this
-port actually runs lives elsewhere.
+Nothing here is applied to anything. Each submodule in `src/` carries the
+changes this port needs as commits on a branch of a fork, so there is no
+patch-applying step at all -- see `.gitmodules`. These are submissions, and
+the copy this port actually runs lives in the submodule.
+
+`git format-patch` from the relevant branch is how one of these is produced
+when it is ready to send.
 
 ## `lwip/`
 

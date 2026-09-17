@@ -133,7 +133,6 @@ What is missing:
 config_esp32c3db.ini      RTEMS BSP config for riscv/esp32c3db
 docs/architecture.md      standing decisions for the port
 docs/esp32c3-bsp.md       how the BSP boots, what QEMU gets wrong, test results
-patches/rtems/            fixes to RTEMS, as patch files
 scripts/build_esp_qemu.sh fetch and build the emulator
 scripts/manifest.sh       what is checked out vs what is recorded
 tools/esp32c3-run-tests.sh

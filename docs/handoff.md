@@ -137,11 +137,10 @@ token, and a URL with a credential in it does not belong in a tracked file.
 
 RSB, into `$HOME/rtems/7`. That path is not freely chosen: the scripts export
 `PATH=$HOME/rtems/7/bin:$PATH`, the tool prefix is `riscv-rtems7-`, and the
-prefix is baked into the compiler. Apply the patches first.
+prefix is baked into the compiler. There is nothing to apply first: every
+submodule carries its own changes as commits on a branch.
 
 ```sh
-scripts/apply_patches.sh rtems rsb
-
 cd src/rsb/rtems
 ../source-builder/sb-set-builder --prefix=$HOME/rtems/7 7/rtems-riscv
 ```
@@ -540,10 +539,29 @@ rather than editing another repository), and there is still no dependency
 tracking: the staging script rebuilds the eight objects every run and decides
 the two archives on mtime alone.
 
-**`src/rtems` reports MISMATCH, and that one is expected.** The pin is upstream
-and `patches/rtems/` is applied on top of it, so a checkout that has had
-`scripts/apply_patches.sh` run will always sit one commit ahead. It is the only
-MISMATCH `scripts/manifest.sh` should report; any other means a pin is stale.
+**No submodule should report MISMATCH.** Every one of them carries whatever
+this port needs as commits on a branch of a fork, pinned by `.gitmodules`, so
+a fresh checkout is clean and there is nothing to apply. A MISMATCH means a pin
+is stale -- someone committed to a submodule and did not move the superproject
+pin.
+
+This used to be a `patches/` directory applied over upstream pins, and it was
+removed rather than fixed. The stack stopped round-tripping: `apply_patches.sh`
+reversed in forward order and exited 0 over a half-reversed tree, which
+silently dropped the esp32c3 watchdog fix -- that does not fail the build, it
+boot-loops the board about a second and a half in. It was not a single bug
+(two patches carried the same hunk, three created files with the wrong `---`,
+and a superseded patch would have applied cleanly to a differently-restored
+tree), and per-patch checking cannot be made to work on a stack where later
+patches edit earlier patches' context. Patches are still the right format for
+*sending* work upstream: `git format-patch` from the branch.
+
+`scripts/check-patch-roundtrip.sh` is what holds that down. It reverses the
+stack, checks the checkout landed on its pin with nothing left over, re-applies
+it, and compares content before and after: a change that is in the tree but in
+no patch, or two patches carrying the same hunk, shows up and exits non-zero.
+Run it after adding or regenerating a patch. It mutates the checkout, so run it
+on a tree whose only local change is the patch stack.
 
 The reason RTEMS changes are carried as patch files at all is that the
 submodule is a shallow clone -- two commits -- so it cannot take a pushed

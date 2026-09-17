@@ -62,7 +62,8 @@ CC=riscv-rtems7-gcc
 command -v $CC >/dev/null 2>&1 || {
   echo "stage: $CC is not on PATH (looked in \$HOME/rtems/7/bin)." >&2
   echo "stage: build the toolchain first -- docs/handoff.md, \"Building the" >&2
-  echo "stage: toolchain\": scripts/apply_patches.sh rtems rsb, then" >&2
+  echo "stage: toolchain: submodules carry their own changes as branches," >&2
+  echo "stage: so there is nothing to apply -- just build:" >&2
   echo "stage: src/rsb/rtems/../source-builder/sb-set-builder" >&2
   echo "stage:   --prefix=\$HOME/rtems/7 7/rtems-riscv" >&2
   exit 2; }

@@ -207,7 +207,8 @@ used for three things at once: the tick interval programmed into TARGET0, the
 timecounter's `tc_frequency`, and `_CPU_Counter_frequency()`. Everything the
 system believes about elapsed time was off by that factor.
 
-`patches/rtems/esp32c3-systimer-frequency.patch` is the one line.
+`src/rtems` commit `faf01c5`, "esp32c3: Correct the systimer frequency", is
+the one line.
 
 What it does **not** do is move the testsuite much, and the reason is worth
 knowing before reading anything into that. The constant is used for both ends
@@ -497,9 +498,9 @@ together for that to be right:
 
 The pin sits between them, so `psxstat` fails — and, as the second commit's own
 message says, it fails **on every BSP**, not just this one.
-`patches/rtems/psxstat-statvfs-expect-success.patch` backports the test change.
+`src/rtems` carries a commit backporting the test change.
 The real fix is advancing `src/rtems`, which is 139 commits behind
-`origin/main`; drop the patch when the pin moves past `4645e241a8`.
+`origin/main`; drop that commit when the pin moves past `4645e241a8`.
 
 ### Three readings of these numbers that were wrong
 

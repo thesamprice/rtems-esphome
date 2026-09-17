@@ -38,8 +38,8 @@ resource here and RAM is the constraint, which is the trade the
 | `i2ctest` | 330.3 | 292.2 | 30.8 | +10.1 |
 | `uarttest` | 335.1 | 296.6 | 31.1 | +10.4 |
 
-Re-measured 2026-09-11 against esphome `7e96d19`, RTEMS pin `b03d4c0119` with
-`patches/rtems/` applied, `riscv-rtems7-gcc 15.2.0` (RSB `105f43d299`).
+Re-measured 2026-09-11 against esphome `7e96d19`, RTEMS pin `b03d4c0119` plus the BSP
+patches now carried as commits on `esp32c3-rtems-esphome`, `riscv-rtems7-gcc 15.2.0` (RSB `105f43d299`).
 
 **The growth is features, not bloat.** The first baseline was taken 29 esphome
 commits earlier, before file-backed preferences, the network interface, lwIP

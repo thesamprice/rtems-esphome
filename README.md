@@ -33,6 +33,10 @@ is somewhere to run it without hardware in the loop.
 | **ESPHome under QEMU** | nine configurations in CI: reference-node, primitives, scheduler, gpio, i2c, spi, uart, opendrain, sensor |
 | **WiFi on real hardware** | scan, WPA2-PSK association, DHCP lease, socket — driven from MicroPython |
 
+632 executables build; 459 are run. The difference is tests the runner skips
+by design -- interactive ones, and those needing a second processor.
+`docs/esp32c3-bsp.md` reconciles the two numbers.
+
 Nothing in the failures is unexplained. 24 are the part being small — 320 KiB
 of RAM is not enough for the filesystem tests to allocate a RAM disk — and
 `ttest01` fails on every architecture upstream. `docs/esp32c3-bsp.md` has the
@@ -66,12 +70,12 @@ discarded the remainder. A tick is 62.5 ns and every guest read is an update, so
 the counter ran slow in proportion to how often software looked at it. Five
 tests move from fail to pass.
 
-**`patches/rtems/psxstat-statvfs-expect-success.patch`** — a backport, not a
+**`src/rtems` — the `psxstat` statvfs expectation** — a backport, not a
 local fix. IMFS gained a real `statvfs` handler upstream in 2025 and `psxstat`
 was not updated until 2026-07-29; the RTEMS revision used here is pinned between
 those two commits, so the test fails on every BSP. Drop it when the pin advances.
 
-**`patches/rtems/esp32c3-systimer-frequency.patch`** — the BSP declared the
+**`src/rtems` commit `faf01c5`** — the BSP declared the
 system timer at `16 * 1024 * 1024` Hz under a comment saying 16 MHz. It is 16
 MHz exactly. The error cancels inside the OS, because the same constant sets
 the tick period and converts it back, which is why the testsuite barely
@@ -86,7 +90,8 @@ python3, pkg-config, glib and libgcrypt >= 1.8.
 git clone https://github.com/thesamprice/rtems-esphome
 cd rtems-esphome
 
-# QEMU, fetched and patched for you.  ~10 minutes.
+# QEMU.  src/esp-qemu is a fork carrying both fixes as commits, so there is
+# nothing to patch.  ~10 minutes.
 scripts/build_esp_qemu.sh
 
 # RTEMS, wherever your checkout is
@@ -138,23 +143,37 @@ What is missing:
 
 ```
 config_esp32c3db.ini      RTEMS BSP config for riscv/esp32c3db
+docs/handoff.md           clean clone to a running board, in order
 docs/architecture.md      standing decisions for the port
 docs/esp32c3-bsp.md       how the BSP boots, what QEMU gets wrong, test results
-scripts/build_esp_qemu.sh fetch and build the emulator
+docs/esp32c3-jtag-debugging.md  halting a wedged C3 over its built-in USB-JTAG
+scripts/build_esp_qemu.sh build the emulator
 scripts/manifest.sh       what is checked out vs what is recorded
-tools/esp32c3-run-tests.sh
-src/esp-qemu              Espressif QEMU + our two fixes
+tests/rtems-ci/           ESPHome configs run on RTEMS, and their assertions
+tests/esp-idf-ci/         the same configs on ESP-IDF, as the A side of an A/B
+tools/esp32c3-run-tests.sh        the RTEMS testsuite under QEMU
+tools/rtems-ci-run.sh             one ESPHome/RTEMS image under QEMU
+tools/stage-esp32c3-workdir.sh    fill a fresh work directory
+tools/build-esp32c3-micropython.sh  build the MicroPython WiFi image
+tools/esp32c3-sample-hung.py      halt a stuck board and say where it is
+src/esp-qemu              Espressif QEMU + our two fixes, as commits
 src/esphome               the thing being ported
+src/rtems                 RTEMS, forked: the ESP32-C3 BSP work
+src/rtems-esp-wifi        RTEMS/Espressif WiFi glue, netif and examples
+src/rtems-lwip            the network stack, sized for a 272 KiB part
+src/micropython           the RTEMS port, and the WiFi example
 src/osal                  NASA OSAL
-src/rtems                 RTEMS
-src/rtems-libbsd          the network stack for the M3 milestone
+src/rtems-libbsd          kept for comparison, not used
 ```
 
-Every submodule is declared `update = none` and none are fetched by a plain
-clone. `scripts/manifest.sh` reports what is checked out against what is
-recorded, and fails if a fetched submodule has drifted off its pin.
+Each submodule is a fork whose branch carries the changes this port needs, so
+a correct checkout is a correct tree and there is nothing to apply.
+`scripts/manifest.sh` reports what is checked out against what is recorded and
+fails on drift. Most are `update = none` and are not fetched by a plain clone;
+`docs/handoff.md` says which, and which need an ssh key.
 
 ## Licence
 
-BSD-2-Clause, see `LICENSE.md`. The patches are against RTEMS (BSD-2-Clause)
-and QEMU (GPL-2.0-or-later) and carry their projects' terms where they apply.
+BSD-2-Clause, see `LICENSE.md`. The forked submodules carry their own
+projects' terms where they apply -- RTEMS (BSD-2-Clause), QEMU
+(GPL-2.0-or-later), MicroPython (MIT).

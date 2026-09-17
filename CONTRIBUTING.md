@@ -23,7 +23,8 @@ them does not get merged, however convenient it is.
    commits.**
 9. **Upstream source modifications** — RTEMS, NASA OSAL, QEMU — are isolated,
    justified by an identified upstream deficiency, and shaped so they can be
-   submitted upstream. See `patches/`.
+   submitted upstream. Each lives as commits on a branch of a fork -- see
+   `.gitmodules` -- and `upstream-proposals/` holds what is ready to send.
 10. **Every newly supported facility gets a non-interactive CI test.**
 11. **Unsupported components fail validation or compilation clearly.** Never a
     partial stub that appears to work.

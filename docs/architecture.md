@@ -205,11 +205,24 @@ pull request rather than as patch files that have to be turned into one later.
 | `src/esphome` | `thesamprice/esphome` | `rtems` |
 | `src/esp-qemu` | `thesamprice/qemu` | `esp32c3-rtems-fixes` |
 
-`patches/` stays for what it is good at: changes against a tree we do not
-intend to carry a branch of. Today that is four RTEMS patches, in
-`rtems_builder/patches/rtems/`: the systimer frequency, the chip header's
-install path, a backport of an upstream commit our pin predates, and the
-ESP32-C3 GPIO driver.
+`patches/` is gone, and the reasoning above now applies to every input: each is
+a fork with a branch. The RTEMS changes that used to live in `patches/rtems/`
+-- the systimer frequency, the chip header's install path, a backport of an
+upstream commit our pin predates, and the ESP32-C3 drivers -- are commits on
+`src/rtems` branch `esp32c3-rtems-esphome`.
+
+The stack was removed rather than repaired because it could not round-trip:
+`apply_patches.sh` reversed in forward order and exited 0 over a half-reversed
+tree, which silently dropped the watchdog fix -- a boot loop on hardware, not a
+build error. Two patches carried the same hunk, three created files with the
+wrong `---`, and a superseded patch would have applied cleanly to a
+differently-restored tree. Underneath all of it, per-patch checking cannot work
+on a stack where later patches edit earlier patches' context: "does this patch
+apply?" has no answer independent of order.
+
+Patches remain the right format for *sending* work upstream, and
+`upstream-proposals/` holds those: `git format-patch` from the branch when
+something is ready.
 
 The GPIO driver stretches the rule and it is worth saying so. It is 300 lines
 and a new file, not a one-line fix, which is the shape that usually argues for

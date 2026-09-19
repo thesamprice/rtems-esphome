@@ -1,0 +1,59 @@
+ESP-ROM:esp32c3-api1-20210207
+Build:Feb  7 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0xd (SPI_FAST_FLASH_BOOT)
+Saved PC:0x42000f38
+
+*** ESP32-C3 BLUETOOTH BRING-UP TEST ***
+
+-- power, clocks and reset --
+  reset cause 0x15 (not a power-on reset)
+  boot     DIG_PWC=0x00040800 DIG_ISO=0x20400080 CLK_EN=0xfffce030
+the Bluetooth clocks are off at boot                 ok
+  RTC_CNTL keeps DIG_PWC and DIG_ISO across a CPU reset, so the
+  boot state here is whatever the last run left.  Skipping the
+  three checks that only a power-on reset can answer.
+from a known down state, is_enabled() is false       ok
+  enabled  DIG_PWC=0x00041000 DIG_ISO=0x20800080 CLK_EN=0xffffefbf
+bsp_esp32_bt_enable() returns RTEMS_SUCCESSFUL       ok
+the power-down force is cleared                      ok
+the power-up force is set                            ok
+the isolation force is cleared                       ok
+the no-isolation force is set                        ok
+the baseband and link controller clocks are on       ok
+bsp_esp32_bt_is_enabled() is true                    ok
+  disabled DIG_PWC=0x00040800 DIG_ISO=0x20400080 CLK_EN=0xfffce7bf
+bsp_esp32_bt_disable() returns RTEMS_SUCCESSFUL      ok
+NEGATIVE CONTROL: disable puts it back down          ok
+NEGATIVE CONTROL: bsp_esp32_bt_is_enabled() is false again ok
+re-enable succeeds, so enable() is idempotent        ok
+
+-- interrupt matrix --
+install a handler on BT_MAC (source 4)               ok
+  BT_MAC routes to CPU channel 22                    ok  (reads 22)
+install a handler on BT_BB (source 5)                ok
+  BT_BB routes to CPU channel 22                     ok  (reads 22)
+install a handler on BT_BB_NMI (source 6)            ok
+  BT_BB_NMI routes to CPU channel 22                 ok  (reads 22)
+install a handler on RWBT (source 7)                 ok
+  RWBT routes to CPU channel 6                       ok  (reads 6)
+install a handler on RWBLE (source 8)                ok
+  RWBLE routes to CPU channel 6                      ok  (reads 6)
+install a handler on RWBT_NMI (source 9)             ok
+  RWBT_NMI routes to CPU channel 6                   ok  (reads 6)
+install a handler on RWBLE_NMI (source 10)           ok
+  RWBLE_NMI routes to CPU channel 6                  ok  (reads 6)
+NEGATIVE CONTROL: an unmapped source is refused      ok
+NEGATIVE CONTROL: and its matrix entry stays clear   ok
+
+  no Bluetooth interrupt can be raised without the link layer
+  controller, so the handler was called 0 times, as expected
+
+0 failure(s)
+CI-MARKER bt bring-up ok
+*** END OF ESP32-C3 BLUETOOTH BRING-UP TEST ***
+
+[ RTEMS shutdown ]
+RTEMS version: 7.0.0.f30da5ae1510bedd048987aba028f632acda858e-modified
+RTEMS tools: 15.2.0 20250808 (RTEMS 7, Build 2026.06.12, RSB 105f43d299cb5c367fc5f2b0147f401721ed3d9c-modified, Newlib 7d4336cf)
+executing thread ID: 0x0a010001
+executing thread name: UI1 

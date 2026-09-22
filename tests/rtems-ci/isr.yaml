@@ -1,0 +1,40 @@
+# Fires a real edge into an interrupt-mode binary_sensor.
+#
+# GPIO0 and GPIO11 are tied together by QEMU:
+#     -global driver=esp32c3.gpio,property=wire,value=0x801
+# so driving GPIO0 makes an edge on GPIO11, which is what calls ESPHome's ISR.
+
+esphome:
+  name: isr
+  includes:
+    - isr_test.h
+  on_boot:
+    priority: -100
+    then:
+      - lambda: "rtems_isr_test::run(id(pin_drive));"
+
+rtems:
+  bsp: riscv/esp32c3db
+
+logger:
+  level: DEBUG
+
+output:
+  - platform: gpio
+    id: pin_drive
+    pin:
+      number: 0
+      mode:
+        output: true
+        open_drain: true
+        pullup: true
+
+binary_sensor:
+  - platform: gpio
+    id: pin_watch
+    name: "Edge watcher"
+    pin:
+      number: 11
+      mode:
+        input: true
+        pullup: true
